@@ -4,9 +4,11 @@
 #
 #   ./build-and-test.sh          every sibling, built and tested as one
 #
-# Each repository gates itself. This gates what no single repository can see:
-# that the nine still work *together*, and that they agree about the versions
-# of the third-party crates whose types cross between them.
+# Each repository gates itself — `bin/gate-common.sh` plus its own
+# `build-and-test.sh`. This runs all nine of those, checks that the nine copies
+# of the shared half are still one file, and then gates what no single
+# repository can see: that they still work *together*, and that they agree
+# about the versions of the third-party crates whose types cross between them.
 #
 # Run it before pushing a change that touches more than one repository. After
 # the push, every repository resolves its siblings from GitHub at whatever
@@ -109,9 +111,77 @@ locks_agree() {
   fi
 }
 
+# Nine copies of one file, and they are the same file.
+#
+# `bin/gate-common.sh` is carried by every repository because there is no
+# submodule and nothing is published. A copy is a fork with a delay on it
+# unless something compares them, and this is that something — the only reason
+# copying is acceptable at all.
+#
+# Compared against this repository's *first* sibling rather than a checked-in
+# reference: there is no canonical copy, and inventing one here would give the
+# file a tenth home nobody edits.
+gates_agree() {
+  say "Every repository carries the same gate-common.sh"
+
+  local sums missing="" repo
+  for repo in "${SIBLINGS[@]}"; do
+    if [ ! -f "../${repo}/bin/gate-common.sh" ]; then
+      missing="${missing} ${repo}"
+    fi
+  done
+  if [ -n "${missing}" ]; then
+    echo "ERROR:${missing} carry no bin/gate-common.sh. Every repository gates" >&2
+    echo "       itself; one that cannot is one whose links, warnings and" >&2
+    echo "       oversized files nothing anywhere reads." >&2
+    return 1
+  fi
+
+  # The monorepo too, while it still exists. It is not one of the nine — its
+  # remote is the author's own and spec 52's step 2 has not been taken — but it
+  # carries a tenth copy of this file, and a copy nobody compares is the whole
+  # thing this check exists to prevent.
+  local copies=("${SIBLINGS[@]/%//bin/gate-common.sh}")
+  if [ -f "../xpui-framework/bin/gate-common.sh" ]; then
+    copies+=("xpui-framework/bin/gate-common.sh")
+  fi
+
+  sums="$(cd .. && shasum -a 256 "${copies[@]}" | sort)"
+  local distinct
+  distinct="$(printf '%s\n' "${sums}" | awk '{print $1}' | sort -u | wc -l | tr -d ' ')"
+  if [ "${distinct}" -ne 1 ]; then
+    printf '%s\n' "${sums}" | sed 's/^/      /' >&2
+    echo "ERROR: ${distinct} different versions of gate-common.sh above. It is" >&2
+    echo "       one file with nine copies; edit one and copy it to the rest." >&2
+    return 1
+  fi
+  printf '    one file, %s copies\n' "${#copies[@]}"
+}
+
+# Each repository's own gate, run from its own root.
+#
+# `xpui-dev/build-and-test.sh` used to open by saying "each repository gates
+# itself" while none of them could. This is the line that makes it true.
+every_repository_gates() {
+  say "Every repository gates itself"
+  local repo failures=""
+  for repo in "${SIBLINGS[@]}"; do
+    printf '\n--- %s\n' "${repo}"
+    if ! (cd "../${repo}" && ./build-and-test.sh); then
+      failures="${failures} ${repo}"
+    fi
+  done
+  if [ -n "${failures}" ]; then
+    echo "ERROR:${failures} failed their own gate." >&2
+    return 1
+  fi
+}
+
 siblings_are_present
 stays_local
+gates_agree
 locks_agree
+every_repository_gates
 the_whole_stack_builds
 
 printf '\nThe stack holds together.\n'
