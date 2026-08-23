@@ -71,8 +71,9 @@ jobs:
       # `cross`, not the default. Each of the nine runs its own gate in its own
       # workflow, so running all nine again here would pay twice for the same
       # checks and eat a private repository's minutes doing it. What is left is
-      # the four things no single repository can see: that the copies of
-      # `gate-common.sh` are still one file, that both SDK pins agree, that
+      # the things no single repository can see: that every sibling is here,
+      # that the copies of the shared files are still one file each, that both
+      # SDK pins agree, that
       # every organisation URL resolves, that the lock files agree about the
       # crates whose types cross a boundary — and that the whole stack still
       # builds from local paths.

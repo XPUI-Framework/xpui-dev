@@ -42,6 +42,12 @@ git clone git@github.com:XPUI-Framework/xpui-dev.git
 cd xpui-dev && ./build-and-test.sh
 ```
 
+The checks are in [`xtask/`](xtask/), in Rust. What is here is only what no
+single repository can see; each of the nine has its own `xtask/` holding its
+own list, and nothing is shared between them but seven modules holding the
+parts that are the same job everywhere: reading a markdown fence, a manifest,
+and a path.
+
 The framework's directory is `xpui`, matching the crate; its repository is
 called `xpui-framework`.
 
@@ -50,7 +56,7 @@ called `xpui-framework`.
 | | |
 |---|---|
 | every sibling is present | a missing one would otherwise resolve from GitHub, and a local change would go untested with the build green |
-| every copy of `gate-common.sh` is the same file | the shared half of the gate is copied, not shared. A copy nobody compares is a fork with a delay on it |
+| every copy of a shared file is the same file | the licence, `clippy.toml` and the seven `xtask` modules below each repository's own check list are copied, not shared. A copy nobody compares is a fork with a delay on it. Each repository's `xtask/src/main.rs` is deliberately *not* compared: it is that repository's own list of checks |
 | both FreeInk SDK pins agree | `xpui-backends` compiles the shim against the SDK's headers and `xpui-cpp` links it. A revision written down twice is one that will disagree with itself |
 | every organisation URL resolves | `doc_paths` reads relative links and says so; nothing else anywhere reads a `github.com/XPUI-Framework/…` URL, and twenty-five of them were once 404s |
 | every lock file agrees | `embedded-graphics`, `embedded-graphics-core`, `critical-section` and `u8g2-fonts` cross repository boundaries as *types*. `DrawTarget` from 0.8.1 is not `DrawTarget` from 0.8.2, and the error blames a trait rather than a version |

@@ -1,0 +1,21 @@
+# The cross-repository gate, as a program rather than shell.
+#
+# It holds only what no single repository can see: that the siblings are all
+# here, that the copied files have not drifted, that both SDK pins agree, that
+# every organisation URL resolves, and that the lock files agree about the
+# crates whose types cross a boundary. Each repository's own checks are in its
+# own `xtask`, and none of them are here.
+#
+# No dependencies, on purpose: a gate that fails because something it fetched
+# moved is a gate that has to be argued with before it can be believed.
+[package]
+name = "xtask"
+description = "The cross-repository gate: the nine, checked against each other"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]

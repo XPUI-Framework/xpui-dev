@@ -18,7 +18,9 @@
 # what a fresh clone would get.
 [workspace]
 resolver = "3"
-members = ["gate"]
+# `xtask` is the cross-repository gate; `gate` is the crate that names the
+# nine as dependencies so one build reaches all of them.
+members = ["gate", "xtask"]
 
 [workspace.package]
 version = "0.1.0"
