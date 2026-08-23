@@ -1,0 +1,80 @@
+name: CI
+
+# Every push to `main`, and every pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cross:
+    name: The stack, as one workspace
+    runs-on: ubuntu-latest
+
+    env:
+      SDL_VIDEODRIVER: dummy
+
+    steps:
+      # This repository is the umbrella: its `[patch]` table points at the
+      # other nine by relative path, so they have to be checked out beside it
+      # rather than under it. Everything lands in `stack/`, which is the layout
+      # the README tells a person to create by hand.
+      #
+      # `xpui-framework` is checked out as `xpui`, matching the crate — the
+      # repository is named for the project and the directory for the crate.
+      - uses: actions/checkout@v6
+        with: { path: stack/xpui-dev }
+      - uses: actions/checkout@v6
+        with: { repository: XPUI-Framework/xpui-framework, path: stack/xpui,            token: "${{ secrets.XPUI_CI_TOKEN }}" }
+      - uses: actions/checkout@v6
+        with: { repository: XPUI-Framework/xpui-chrome,    path: stack/xpui-chrome,     token: "${{ secrets.XPUI_CI_TOKEN }}" }
+      - uses: actions/checkout@v6
+        with: { repository: XPUI-Framework/xpui-boards,    path: stack/xpui-boards,     token: "${{ secrets.XPUI_CI_TOKEN }}" }
+      - uses: actions/checkout@v6
+        with: { repository: XPUI-Framework/xpui-backends,  path: stack/xpui-backends,   token: "${{ secrets.XPUI_CI_TOKEN }}" }
+      - uses: actions/checkout@v6
+        with: { repository: XPUI-Framework/xpui-simulator, path: stack/xpui-simulator,  token: "${{ secrets.XPUI_CI_TOKEN }}" }
+      - uses: actions/checkout@v6
+        with: { repository: XPUI-Framework/xpui-gallery,   path: stack/xpui-gallery,    token: "${{ secrets.XPUI_CI_TOKEN }}" }
+      - uses: actions/checkout@v6
+        with: { repository: XPUI-Framework/xpui-rp2040,    path: stack/xpui-rp2040,     token: "${{ secrets.XPUI_CI_TOKEN }}" }
+      - uses: actions/checkout@v6
+        with: { repository: XPUI-Framework/xpui-esp32,     path: stack/xpui-esp32,      token: "${{ secrets.XPUI_CI_TOKEN }}" }
+      - uses: actions/checkout@v6
+        with: { repository: XPUI-Framework/xpui-cpp,       path: stack/xpui-cpp,        token: "${{ secrets.XPUI_CI_TOKEN }}" }
+
+      # `the_whole_stack_builds` compiles the simulator, which links SDL2.
+      - name: Install SDL2
+        run: sudo apt-get update && sudo apt-get install -y libsdl2-dev
+
+      - name: Install Rust
+        run: |
+          cd stack/xpui-dev
+          rustup show active-toolchain
+          rustup target add riscv32imc-unknown-none-elf thumbv6m-none-eabi
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup/toolchains
+            ~/.cargo/registry
+            ~/.cargo/git
+            stack/xpui-dev/target
+          key: dev-${{ runner.os }}-${{ hashFiles('stack/xpui-dev/Cargo.lock') }}
+          restore-keys: dev-${{ runner.os }}-
+
+      # `cross`, not the default. Each of the nine runs its own gate in its own
+      # workflow, so running all nine again here would pay twice for the same
+      # checks and eat a private repository's minutes doing it. What is left is
+      # the four things no single repository can see: that the copies of
+      # `gate-common.sh` are still one file, that both SDK pins agree, that
+      # every organisation URL resolves, that the lock files agree about the
+      # crates whose types cross a boundary — and that the whole stack still
+      # builds from local paths.
+      - name: The cross-repository gate
+        run: cd stack/xpui-dev && ./build-and-test.sh cross
