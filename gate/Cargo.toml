@@ -1,0 +1,24 @@
+# A crate that exists so the workspace has a member and one lock file.
+#
+# It depends on every library in the stack, which is the point: resolving it
+# resolves all of them together, and `locks_agree` reads the lock file that
+# falls out. Nothing here has any code.
+[package]
+name = "xpui-dev-gate"
+description = "Resolves every xpui crate at once, so one lock file covers the stack"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+xpui = { git = "https://github.com/XPUI-Framework/xpui-framework", branch = "main" }
+xpui-chrome = { git = "https://github.com/XPUI-Framework/xpui-chrome", branch = "main" }
+xpui-boards-core = { git = "https://github.com/XPUI-Framework/xpui-boards", branch = "main" }
+xpui-boards-pimoroni = { git = "https://github.com/XPUI-Framework/xpui-boards", branch = "main" }
+xpui-boards-seeed = { git = "https://github.com/XPUI-Framework/xpui-boards", branch = "main" }
+xpui-boards-xteink = { git = "https://github.com/XPUI-Framework/xpui-boards", branch = "main" }
+xpui-embedded-graphics = { git = "https://github.com/XPUI-Framework/xpui-backends", branch = "main" }
+xpui-fui = { git = "https://github.com/XPUI-Framework/xpui-backends", branch = "main" }
+xpui-screenshot = { git = "https://github.com/XPUI-Framework/xpui-backends", branch = "main" }
+xpui-simulator = { git = "https://github.com/XPUI-Framework/xpui-simulator", branch = "main" }
+xpui-gallery = { git = "https://github.com/XPUI-Framework/xpui-gallery", branch = "main" }

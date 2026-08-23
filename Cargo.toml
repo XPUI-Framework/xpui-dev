@@ -1,0 +1,52 @@
+# The umbrella. Nine repositories, checked out side by side, built as one.
+#
+# The split cost the single command that gated everything: a `Chrome` change
+# used to be one commit and one `cargo test`, and afterwards it is a change in
+# one repository and a `cargo update` in five others, with nothing to say the
+# five still work.
+#
+# This is what replaces it. `[patch]` below points every `xpui*` git dependency
+# at the sibling checkout on disk, so a cross-cutting change is still one build
+# and one test run before anything is pushed. Without it the split is not
+# livable.
+#
+# **Never pushed.** Its `[patch]` paths are this machine's, and a lock file
+# resolved against them means nothing anywhere else. `git remote` here is
+# empty on purpose.
+[workspace]
+resolver = "3"
+members = ["gate"]
+
+# One entry per repository, keyed by the exact URL the manifests name. Cargo
+# matches these by string: a trailing `.git`, `http` for `https`, or a
+# different case and the patch silently does not apply — the build succeeds
+# against the pushed revision and the local change is not tested at all.
+[patch.'https://github.com/XPUI-Framework/xpui-framework']
+xpui = { path = "../xpui" }
+
+[patch.'https://github.com/XPUI-Framework/xpui-chrome']
+xpui-chrome = { path = "../xpui-chrome" }
+
+[patch.'https://github.com/XPUI-Framework/xpui-boards']
+xpui-boards-core = { path = "../xpui-boards/core" }
+xpui-boards-pimoroni = { path = "../xpui-boards/pimoroni" }
+xpui-boards-seeed = { path = "../xpui-boards/seeed" }
+xpui-boards-xteink = { path = "../xpui-boards/xteink" }
+
+[patch.'https://github.com/XPUI-Framework/xpui-backends']
+xpui-abi-check = { path = "../xpui-backends/abi-check" }
+xpui-embedded-graphics = { path = "../xpui-backends/embedded_graphics" }
+xpui-fui = { path = "../xpui-backends/fui" }
+xpui-screenshot = { path = "../xpui-backends/screenshot" }
+
+[patch.'https://github.com/XPUI-Framework/xpui-simulator']
+xpui-simulator = { path = "../xpui-simulator" }
+
+[patch.'https://github.com/XPUI-Framework/xpui-gallery']
+xpui-gallery = { path = "../xpui-gallery/gallery" }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
