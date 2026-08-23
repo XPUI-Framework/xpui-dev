@@ -177,9 +177,72 @@ every_repository_gates() {
   fi
 }
 
+# Every organisation URL names a path that is actually in that repository.
+#
+# This is the check whose absence cost sixty-one links twice over. `doc_paths`
+# reads relative paths and says so deliberately; when the split turned those
+# into `https://github.com/XPUI-Framework/…` URLs, it turned links a gate could
+# read into links no gate anywhere could — and twenty-five of them named the
+# monorepo's layout under the organisation's flat framework repository, so they
+# were 404s from the moment they were written, in READMEs and in rustdoc.
+#
+# Only this repository can check them, because only this one has every sibling
+# checked out. It resolves against `origin/main` rather than the working tree:
+# a path that exists only locally is a link that is broken for everybody else,
+# which is the entire failure mode.
+#
+# **`xpui-framework` is the flat framework crate, not the monorepo.** The
+# monorepo lives on the author's own remote under the same name, and confusing
+# the two is what produced the twenty-five.
+org_links_resolve() {
+  say "Every organisation URL names a file that is there"
+
+  local urls broken=0 url repo path dir tree
+  urls="$(cd .. && grep -rhoE \
+    'https://github\.com/XPUI-Framework/[a-z0-9-]+/(blob|tree)/main/[^)# ]*' \
+    --include='*.md' --include='*.rs' --include='*.toml' \
+    --exclude-dir=target "${SIBLINGS[@]}" 2>/dev/null | sort -u || true)"
+
+  # No URLs at all means the grep broke, not that the tree is clean.
+  if [ -z "${urls}" ]; then
+    echo "ERROR: no organisation URLs found anywhere, which cannot be right." >&2
+    return 1
+  fi
+
+  while IFS= read -r url; do
+    repo="${url#https://github.com/XPUI-Framework/}"
+    repo="${repo%%/*}"
+    path="${url#*/main/}"
+    dir="../${repo}"
+    # The organisation's `xpui-framework` is the crate, checked out as `xpui`.
+    [ "${repo}" = "xpui-framework" ] && dir="../xpui"
+    if [ ! -d "${dir}/.git" ]; then
+      printf '  %s: no checkout of %s to check it against\n' "${url}" "${repo}" >&2
+      broken=$((broken + 1))
+      continue
+    fi
+    tree="$(git -C "${dir}" ls-tree -r --name-only origin/main)"
+    if printf '%s\n' "${tree}" | grep -qx "${path}" \
+       || printf '%s\n' "${tree}" | grep -q "^${path}/"; then
+      continue
+    fi
+    printf '  %s\n' "${url}" >&2
+    broken=$((broken + 1))
+  done <<< "${urls}"
+
+  if [ "${broken}" -gt 0 ]; then
+    echo "ERROR: ${broken} organisation URL(s) above name nothing on that" >&2
+    echo "       repository's main branch. A 404 in a README is worse than a" >&2
+    echo "       relative path, because nothing but this line reads it." >&2
+    return 1
+  fi
+  printf '    %s URLs, all resolved\n' "$(printf '%s\n' "${urls}" | wc -l | tr -d ' ')"
+}
+
 siblings_are_present
 stays_local
 gates_agree
+org_links_resolve
 locks_agree
 every_repository_gates
 the_whole_stack_builds
