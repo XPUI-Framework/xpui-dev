@@ -3,6 +3,13 @@
 # The cross-repository half of the gate.
 #
 #   ./build-and-test.sh          every sibling, built and tested as one
+#   ./build-and-test.sh cross    only what no single repository can check
+#
+# The second exists for CI. Every repository runs its own gate in its own
+# workflow, so running all nine again here would pay twice for the same
+# checks — `cross` skips `every_repository_gates` and keeps the four that are
+# genuinely cross-repository. On a laptop, before a push, use the first: there
+# the siblings hold uncommitted changes their own CI has never seen.
 #
 # Each repository gates itself — `bin/gate-common.sh` plus its own
 # `build-and-test.sh`. This runs all nine of those, checks that the nine copies
@@ -45,18 +52,6 @@ siblings_are_present() {
   done
   if [ "${missing}" -gt 0 ]; then
     echo "ERROR: ${missing} missing. Clone them from github.com/XPUI-Framework." >&2
-    return 1
-  fi
-}
-
-# Nothing here may be pushed: the `[patch]` paths are this machine's, and a
-# lock file resolved against them is meaningless anywhere else.
-stays_local() {
-  say "This repository has no remote"
-  if git remote | grep -q .; then
-    echo "ERROR: xpui-dev has a remote. Its [patch] paths are local to this" >&2
-    echo "       machine; a lock file resolved against them means nothing" >&2
-    echo "       elsewhere. Remove it." >&2
     return 1
   fi
 }
@@ -111,51 +106,84 @@ locks_agree() {
   fi
 }
 
-# Nine copies of one file, and they are the same file.
+# The files every repository carries a copy of, and which must not drift.
 #
-# `bin/gate-common.sh` is carried by every repository because there is no
-# submodule and nothing is published. A copy is a fork with a delay on it
-# unless something compares them, and this is that something — the only reason
-# copying is acceptable at all.
+# There is no submodule and nothing is published, so a handful of files are
+# **copied** into every repository: the shared half of the gate, the licence,
+# and clippy's configuration. A copy nobody compares is a fork with a delay on
+# it — and that is not hypothetical here. The nine repositories ran clippy
+# under *different settings* from the monorepo for as long as `clippy.toml`
+# existed in only one of them, and nothing said so, because the check that
+# existed compared `gate-common.sh` and only `gate-common.sh`.
 #
-# Compared against this repository's *first* sibling rather than a checked-in
-# reference: there is no canonical copy, and inventing one here would give the
-# file a tenth home nobody edits.
-gates_agree() {
-  say "Every repository carries the same gate-common.sh"
+# `rust-toolchain.toml` is the one exception, and it is checked differently:
+# its `targets` list legitimately differs per repository, so only the `channel`
+# line has to agree. Repositories bumping to different compilers is exactly the
+# drift this prevents.
+# `bin/gate-common.sh` is the nine and the monorepo; this repository has no
+# copy, because it *is* the cross-repository half and shares no checks with
+# them. Everything else is carried here too and is compared here too — a
+# licence or a lint setting that drifts in the umbrella is still drift.
+SHARED_FILES=("bin/gate-common.sh" "LICENSE" "clippy.toml")
+SHARED_FILES_HERE_TOO=("LICENSE" "clippy.toml")
 
-  local sums missing="" repo
-  for repo in "${SIBLINGS[@]}"; do
-    if [ ! -f "../${repo}/bin/gate-common.sh" ]; then
-      missing="${missing} ${repo}"
+shared_files_agree() {
+  say "Every repository carries the same copy of each shared file"
+
+  # The monorepo too, while it exists. It is not one of the nine — its remote
+  # is the author's own — but it carries the same copies, and a copy nobody
+  # compares is the whole thing this check exists to prevent.
+  local roots=("${SIBLINGS[@]}")
+  if [ -d "../xpui-framework/.git" ]; then
+    roots+=("xpui-framework")
+  fi
+
+  local failures=0 file root missing sums distinct here
+  for file in "${SHARED_FILES[@]}"; do
+    # This repository's own copy, for the files it carries.
+    here=("${roots[@]}")
+    case " ${SHARED_FILES_HERE_TOO[*]} " in
+      *" ${file} "*) here+=("xpui-dev") ;;
+    esac
+    missing=""
+    for root in "${here[@]}"; do
+      [ -f "../${root}/${file}" ] || missing="${missing} ${root}"
+    done
+    if [ -n "${missing}" ]; then
+      printf '  %s is absent from:%s\n' "${file}" "${missing}" >&2
+      failures=$((failures + 1))
+      continue
     fi
+
+    sums="$(cd .. && shasum -a 256 "${here[@]/%//${file}}" | sort)"
+    distinct="$(printf '%s\n' "${sums}" | awk '{print $1}' | sort -u | wc -l | tr -d " ")"
+    if [ "${distinct}" -ne 1 ]; then
+      printf '%s\n' "${sums}" | sed "s/^/      /" >&2
+      printf '  %s has %s different versions above\n' "${file}" "${distinct}" >&2
+      failures=$((failures + 1))
+      continue
+    fi
+    printf '    %-22s one file, %s copies\n' "${file}" "${#here[@]}"
   done
-  if [ -n "${missing}" ]; then
-    echo "ERROR:${missing} carry no bin/gate-common.sh. Every repository gates" >&2
-    echo "       itself; one that cannot is one whose links, warnings and" >&2
-    echo "       oversized files nothing anywhere reads." >&2
-    return 1
+
+  # The toolchain: same compiler everywhere, whatever targets each installs.
+  local channels
+  channels="$(cd .. && for root in "${roots[@]}" xpui-dev; do
+    grep -h "^channel" "${root}/rust-toolchain.toml" 2>/dev/null || echo "MISSING ${root}"
+  done | sort -u)"
+  if [ "$(printf '%s\n' "${channels}" | wc -l | tr -d " ")" -ne 1 ]; then
+    printf '%s\n' "${channels}" | sed "s/^/      /" >&2
+    echo "  rust-toolchain.toml names more than one channel above" >&2
+    failures=$((failures + 1))
+  else
+    printf "    %-22s %s\n" "rust-toolchain.toml" "${channels}"
   fi
 
-  # The monorepo too, while it still exists. It is not one of the nine — its
-  # remote is the author's own and spec 52's step 2 has not been taken — but it
-  # carries a tenth copy of this file, and a copy nobody compares is the whole
-  # thing this check exists to prevent.
-  local copies=("${SIBLINGS[@]/%//bin/gate-common.sh}")
-  if [ -f "../xpui-framework/bin/gate-common.sh" ]; then
-    copies+=("xpui-framework/bin/gate-common.sh")
-  fi
-
-  sums="$(cd .. && shasum -a 256 "${copies[@]}" | sort)"
-  local distinct
-  distinct="$(printf '%s\n' "${sums}" | awk '{print $1}' | sort -u | wc -l | tr -d ' ')"
-  if [ "${distinct}" -ne 1 ]; then
-    printf '%s\n' "${sums}" | sed 's/^/      /' >&2
-    echo "ERROR: ${distinct} different versions of gate-common.sh above. It is" >&2
-    echo "       one file with nine copies; edit one and copy it to the rest." >&2
+  if [ "${failures}" -gt 0 ]; then
+    echo "ERROR: ${failures} shared file(s) above have drifted. Each is one file" >&2
+    echo "       with a copy per repository; edit one and copy it to the rest." >&2
     return 1
   fi
-  printf '    one file, %s copies\n' "${#copies[@]}"
 }
 
 # Each repository's own gate, run from its own root.
@@ -239,12 +267,63 @@ org_links_resolve() {
   printf '    %s URLs, all resolved\n' "$(printf '%s\n' "${urls}" | wc -l | tr -d ' ')"
 }
 
-siblings_are_present
-stays_local
-gates_agree
-org_links_resolve
-locks_agree
-every_repository_gates
-the_whole_stack_builds
+# The FreeInk SDK revision, written down in two repositories.
+#
+# `xpui-backends` compiles the shim against the SDK's headers and `xpui-cpp`
+# links it, so each pins a revision — and a revision written down twice is a
+# revision that will disagree with itself. The monorepo kept one file that
+# CMake and CI both read; the split gave them one each, and this is what stops
+# them drifting.
+sdk_revisions_agree() {
+  say "Both repositories pin the same FreeInk SDK revision"
 
-printf '\nThe stack holds together.\n'
+  local backends="../xpui-backends/fui/freeink-sdk.rev"
+  local cpp="../xpui-cpp/cpp_host/freeink-sdk.rev"
+  local missing=0 file
+  for file in "${backends}" "${cpp}"; do
+    if [ ! -f "${file}" ]; then
+      printf '  %s is not there\n' "${file}" >&2
+      missing=$((missing + 1))
+    fi
+  done
+  if [ "${missing}" -gt 0 ]; then
+    echo "ERROR: a repository that compiles against the SDK pins no revision," >&2
+    echo "       so its CI would clone whatever main happens to be." >&2
+    return 1
+  fi
+
+  if ! diff -q "${backends}" "${cpp}" >/dev/null; then
+    printf '  xpui-backends: %s\n' "$(cat "${backends}")" >&2
+    printf '  xpui-cpp:      %s\n' "$(cat "${cpp}")" >&2
+    echo "ERROR: the two pins differ. The shim is syntax-checked against one" >&2
+    echo "       SDK and linked against another, and the error surfaces at the" >&2
+    echo "       link with no hint that a revision is the cause." >&2
+    return 1
+  fi
+  printf '    %s\n' "$(cat "${backends}")"
+}
+
+cross_repository_only() {
+  siblings_are_present
+  shared_files_agree
+  sdk_revisions_agree
+  org_links_resolve
+  locks_agree
+  the_whole_stack_builds
+}
+
+case "${1:-all}" in
+  all)
+    cross_repository_only
+    every_repository_gates
+    printf '\nThe stack holds together.\n'
+    ;;
+  cross)
+    cross_repository_only
+    printf '\nThe cross-repository checks pass. Each gate runs in its own CI.\n'
+    ;;
+  *)
+    echo "usage: ./build-and-test.sh [all|cross]" >&2
+    exit 2
+    ;;
+esac
