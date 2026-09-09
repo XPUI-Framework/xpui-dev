@@ -44,7 +44,7 @@ cd xpui-dev && ./build-and-test.sh
 
 The checks are in [`xtask/`](xtask/), in Rust. What is here is only what no
 single repository can see; each of the nine has its own `xtask/` holding its
-own list, and nothing is shared between them but seven modules holding the
+own list, and nothing is shared between them but ten modules holding the
 parts that are the same job everywhere: reading a markdown fence, a manifest,
 and a path.
 
@@ -56,7 +56,8 @@ called `xpui-framework`.
 | | |
 |---|---|
 | every sibling is present | a missing one would otherwise resolve from GitHub, and a local change would go untested with the build green |
-| every copy of a shared file is the same file | the licence, `clippy.toml` and the seven `xtask` modules below each repository's own check list are copied, not shared. A copy nobody compares is a fork with a delay on it. Each repository's `xtask/src/main.rs` is deliberately *not* compared: it is that repository's own list of checks |
+| every copy of a shared file is the same file | the licence, `clippy.toml` and the ten `xtask` modules below each repository's own check list are copied, not shared. A copy nobody compares is a fork with a delay on it. Each repository's `xtask/src/main.rs` is deliberately *not* compared: it is that repository's own list of checks |
+| every copy of a shared section is the same section | the `## Where it sits` diagram in every README, apart from the `style` line that bolds the repository you are in, and the `[workspace.lints]` table in every workspace root |
 | both FreeInk SDK pins agree | `xpui-backends` compiles the shim against the SDK's headers and `xpui-cpp` links it. A revision written down twice is one that will disagree with itself |
 | every organisation URL resolves | `doc_paths` reads relative links and says so; nothing else anywhere reads a `github.com/XPUI-Framework/…` URL, and twenty-five of them were once 404s |
 | every lock file agrees | `embedded-graphics`, `embedded-graphics-core`, `critical-section` and `u8g2-fonts` cross repository boundaries as *types*. `DrawTarget` from 0.8.1 is not `DrawTarget` from 0.8.2, and the error blames a trait rather than a version |
@@ -72,6 +73,58 @@ Cargo matches a patch to a dependency **by URL string**. A trailing `.git`,
 apply — the build succeeds against the pushed revision, and the local change
 is not tested at all. `Cargo.lock` is where to check: every `xpui*` crate
 should have no `source` line.
+
+## Where it sits
+
+Every arrow is a dependency in a `Cargo.toml`, and they all point inward
+toward `xpui`, which depends on nothing at all. That is the rule the
+organisation is arranged around: a backend can be written without the framework
+knowing it exists, and a firmware reaches whatever it needs directly rather
+than through whoever happens to sit above it.
+
+```mermaid
+flowchart BT
+  xpui["xpui<br/>the framework"]
+  chrome["xpui-chrome<br/>components"]
+  boards["xpui-boards<br/>seven devices"]
+  backends["xpui-backends<br/>two backends"]
+  simulator["xpui-simulator<br/>a window"]
+  gallery["xpui-gallery<br/>the app"]
+  rp2040["xpui-rp2040<br/>firmware"]
+  esp32["xpui-esp32<br/>firmware"]
+  cpp["xpui-cpp<br/>a C++ host"]
+  dev["xpui-dev<br/>the umbrella"]
+  chrome --> xpui
+  boards --> xpui
+  backends --> xpui
+  backends --> chrome
+  simulator --> xpui
+  simulator --> chrome
+  simulator --> boards
+  simulator --> backends
+  gallery --> xpui
+  gallery --> chrome
+  gallery --> boards
+  gallery --> backends
+  gallery --> simulator
+  rp2040 --> xpui
+  rp2040 --> boards
+  rp2040 --> backends
+  rp2040 --> gallery
+  esp32 --> xpui
+  esp32 --> boards
+  esp32 --> backends
+  esp32 --> gallery
+  cpp --> xpui
+  cpp --> backends
+  dev --> xpui
+  dev --> chrome
+  dev --> boards
+  dev --> backends
+  dev --> simulator
+  dev --> gallery
+  style dev stroke-width:3px
+```
 
 ## License
 
