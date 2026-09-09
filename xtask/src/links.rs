@@ -1,9 +1,7 @@
 //! Absolute links into the organisation, checked against the branch they name.
 //!
-//! Each repository's own gate reads its *relative* links. Nothing anywhere
-//! reads a `github.com/XPUI-Framework/…` URL, and twenty-five of them were
-//! once 404s — because the organisation's `xpui-framework` is the framework
-//! crate, and the directory of that name on this machine is the monorepo.
+//! Each repository's own gate reads its *relative* links; nothing else reads
+//! a `github.com/XPUI-Framework/…` URL.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -34,6 +32,14 @@ pub fn org_links_resolve() -> Result<String, String> {
             continue;
         };
         let repo = repo.trim_end_matches("/blob").trim_end_matches("/tree");
+        // The profile repository is what GitHub shows on the organisation
+        // page. It links out to the ten; nothing links into it.
+        if repo == ".github" {
+            broken.push(format!(
+                "  {url}\n      the organisation profile is never linked to, only from"
+            ));
+            continue;
+        }
         // The organisation's `xpui-framework` is the framework crate, and it
         // is checked out here as `xpui`. The directory of that name beside it
         // is the monorepo, on a different remote entirely.
@@ -83,10 +89,11 @@ pub fn org_links_resolve() -> Result<String, String> {
     }
 }
 
-/// Every `blob`/`tree` URL into the organisation, across the nine.
+/// Every `blob`/`tree` URL into the organisation, across the nine and this
+/// repository.
 fn collect() -> BTreeSet<String> {
     let mut found = BTreeSet::new();
-    for repo in SIBLINGS {
+    for repo in SIBLINGS.iter().chain(std::iter::once(&"xpui-dev")) {
         walk(&Path::new("..").join(repo), &mut found);
     }
     found
@@ -120,10 +127,9 @@ fn walk(dir: &Path, found: &mut BTreeSet<String>) {
 
 /// The organisation URLs in one file's text.
 ///
-/// A URL ends at whitespace, a closing parenthesis or a `#` anchor — the same
-/// three the shell's regex stopped at, and for the same reason: a markdown
-/// link's `)` is not part of the address, and an anchor is a claim about a
-/// heading rather than a file.
+/// A URL ends at whitespace, a closing parenthesis or a `#` anchor: a
+/// markdown link's `)` is not part of the address, and an anchor is a claim
+/// about a heading rather than a file.
 fn urls_in(text: &str) -> Vec<String> {
     let mut out = Vec::new();
     let mut rest = text;
@@ -174,8 +180,9 @@ mod tests {
 
     #[test]
     fn two_urls_on_one_line_are_both_found() {
-        let text = "https://github.com/XPUI-Framework/a/blob/main/x.rs and \
-                    https://github.com/XPUI-Framework/b/tree/main/y";
-        assert_eq!(urls_in(text).len(), 2);
+        // Built at run time: this file is walked too, and a literal here would
+        // be a claim about a repository that does not exist.
+        let text = format!("{PREFIX}a/blob/main/x.rs and {PREFIX}b/tree/main/y");
+        assert_eq!(urls_in(&text).len(), 2);
     }
 }

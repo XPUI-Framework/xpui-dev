@@ -16,6 +16,7 @@
 mod files;
 mod links;
 mod locks;
+mod sections;
 
 use std::process::{Command, ExitCode};
 
@@ -48,10 +49,7 @@ fn main() -> ExitCode {
     };
 
     let mut gate: Vec<(&str, Box<dyn Fn() -> Result<String, String>>)> = vec![
-        // This repository's own code first. The shell this replaced had no
-        // `cargo fmt` and no clippy for itself, so the Rust that arrived with
-        // the move would have been the only source in the organisation that
-        // nothing held to a standard.
+        // This repository's own code first.
         (
             "format",
             Box::new(|| run(env!("CARGO"), &["fmt", "--all", "--check"]).map(|()| "clean".into())),
@@ -80,6 +78,10 @@ fn main() -> ExitCode {
         (
             "every shared file is one file",
             Box::new(files::shared_files_agree),
+        ),
+        (
+            "every shared section is one section",
+            Box::new(sections::shared_sections_agree),
         ),
         (
             "both repositories pin the same SDK revision",
@@ -152,9 +154,6 @@ fn siblings_are_present() -> Result<String, String> {
 }
 
 /// Each repository's own gate, run from its own root.
-///
-/// This repository used to open by saying "each repository gates itself" while
-/// none of them could. This is the line that makes it true.
 fn every_repository_gates() -> Result<String, String> {
     let mut failures = Vec::new();
     for repo in SIBLINGS {

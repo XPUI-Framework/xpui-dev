@@ -10,42 +10,97 @@ use crate::SIBLINGS;
 /// all eleven — a lint setting that drifts in the umbrella is still drift.
 const SHARED: [&str; 2] = ["LICENSE", "clippy.toml"];
 
-/// The seven modules every repository's `xtask` carries.
+/// The ten modules every sibling's `xtask` carries.
 ///
-/// Not `main.rs`, which is each repository's own list of checks and is *meant*
-/// to differ: the whole point of moving the gate into Rust was that no
-/// repository carries a check it never runs. What these four hold is the
-/// reading of a markdown fence and a manifest, which is the same job
-/// everywhere, and which is the half that had the bugs.
+/// Not `main.rs`, which is each repository's own list of checks and is meant
+/// to differ. These hold the reading of a markdown fence, a manifest, a path
+/// and a comment, which is the same job everywhere.
 ///
-/// The nine only. This repository's gate is the cross-repository half and
-/// shares no checks with them; the monorepo still runs the shell this
-/// replaced.
-const XTASK: [&str; 7] = [
+/// The nine only: this repository's gate is the cross-repository half and
+/// shares no checks with them.
+const XTASK: [&str; 10] = [
+    "xtask/src/agents.rs",
     "xtask/src/commands.rs",
+    "xtask/src/comments.rs",
     "xtask/src/docs.rs",
     "xtask/src/faults.rs",
     "xtask/src/fences.rs",
     "xtask/src/paths.rs",
     "xtask/src/prose.rs",
+    "xtask/src/readme.rs",
     "xtask/src/tree.rs",
 ];
 
-/// Files that only two repositories carry, and the two that carry them.
+/// Files carried by a named subset, and the subset that carries each.
 ///
-/// `cpp.rs` is the C++ half of the gate, and only `xpui-backends` and
-/// `xpui-cpp` hold C++ — that is the whole point of the split. It is copied
-/// between exactly those two, so it is compared between exactly those two.
-const TWO_ONLY: [(&str, [&str; 2]); 1] = [("xtask/src/cpp.rs", ["xpui-backends", "xpui-cpp"])];
+/// A file may be listed more than once with disjoint subsets: `cargo.rs` has
+/// three shapes, and each shape is one file across the repositories that hold
+/// it.
+const GROUPS: &[(&str, &[&str])] = &[
+    // The C++ half of the gate, in the two repositories that hold C++.
+    ("xtask/src/cpp.rs", &["xpui-backends", "xpui-cpp"]),
+    (
+        "xtask/src/cargo.rs",
+        &[
+            "xpui",
+            "xpui-chrome",
+            "xpui-boards",
+            "xpui-backends",
+            "xpui-gallery",
+            "xpui-esp32",
+        ],
+    ),
+    // With `host_triple`: `.cargo/config.toml` there targets the board.
+    ("xtask/src/cargo.rs", &["xpui-rp2040"]),
+    // Without `target_installed`: neither has a bare-metal lint.
+    ("xtask/src/cargo.rs", &["xpui-simulator", "xpui-cpp"]),
+    // `xpui-cpp`'s is a superset with the PlatformIO lines, and there is no
+    // superset mode here, so it is left out.
+    (
+        ".gitignore",
+        &[
+            "xpui",
+            "xpui-chrome",
+            "xpui-boards",
+            "xpui-backends",
+            "xpui-simulator",
+            "xpui-gallery",
+            "xpui-rp2040",
+            "xpui-esp32",
+            "xpui-dev",
+        ],
+    ),
+    // The three `all`-mode repositories and this one take other arguments.
+    (
+        "build-and-test.sh",
+        &[
+            "xpui",
+            "xpui-chrome",
+            "xpui-boards",
+            "xpui-backends",
+            "xpui-simulator",
+            "xpui-gallery",
+        ],
+    ),
+];
+
+/// Files carried by the nine and this repository, and not the monorepo: the
+/// community files and the two reviewer agents.
+const TEN_ONLY: [&str; 8] = [
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md",
+    ".github/ISSUE_TEMPLATE/bug.yml",
+    ".github/ISSUE_TEMPLATE/feature.yml",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+    ".github/dependabot.yml",
+    ".claude/agents/code-reviewer.md",
+    ".claude/agents/docs-reviewer.md",
+];
 
 /// Every repository carries the same copy of each shared file.
 ///
 /// There is no submodule and nothing is published, so these files are
-/// **copied**. A copy nobody compares is a fork with a delay on it — and that
-/// is not hypothetical here. The nine ran clippy under *different settings*
-/// from the monorepo for as long as `clippy.toml` existed in only one of them,
-/// and nothing said so, because the check that existed compared one file and
-/// only that file.
+/// **copied**. A copy nobody compares is a fork with a delay on it.
 pub fn shared_files_agree() -> Result<String, String> {
     let mut roots: Vec<String> = SIBLINGS.iter().map(|s| s.to_string()).collect();
     // The monorepo too, while it exists. It is not one of the nine — its
@@ -53,27 +108,18 @@ pub fn shared_files_agree() -> Result<String, String> {
     if Path::new("../xpui-framework/.git").exists() {
         roots.push("xpui-framework".into());
     }
+    let mut eleven = roots.clone();
+    eleven.push("xpui-dev".into());
+    let nine: Vec<String> = SIBLINGS.iter().map(|s| s.to_string()).collect();
+    let mut ten = nine.clone();
+    ten.push("xpui-dev".into());
 
     let mut notes = Vec::new();
     let mut problems = Vec::new();
 
-    for file in SHARED
-        .iter()
-        .chain(XTASK.iter())
-        .chain(TWO_ONLY.iter().map(|(name, _)| name))
-    {
-        let mut here: Vec<String> =
-            if let Some((_, only)) = TWO_ONLY.iter().find(|(name, _)| name == file) {
-                only.iter().map(|s| (*s).to_string()).collect()
-            } else if XTASK.contains(file) {
-                SIBLINGS.iter().map(|s| s.to_string()).collect()
-            } else {
-                let mut all = roots.clone();
-                all.push("xpui-dev".into());
-                all
-            };
+    let mut compare = |file: &str, roots: &[String], named: bool| {
+        let mut here = roots.to_vec();
         here.sort();
-
         let mut by_content: BTreeMap<Vec<u8>, Vec<String>> = BTreeMap::new();
         let mut missing = Vec::new();
         for root in &here {
@@ -84,9 +130,7 @@ pub fn shared_files_agree() -> Result<String, String> {
         }
         if !missing.is_empty() {
             problems.push(format!("  {file} is absent from: {}", missing.join(", ")));
-            continue;
-        }
-        if by_content.len() > 1 {
+        } else if by_content.len() > 1 {
             problems.push(format!(
                 "  {file} has {} different versions:\n{}",
                 by_content.len(),
@@ -96,9 +140,26 @@ pub fn shared_files_agree() -> Result<String, String> {
                     .collect::<Vec<_>>()
                     .join("\n")
             ));
-            continue;
+        } else if named {
+            notes.push(format!("{file:<22} one file across {}", here.join(", ")));
+        } else {
+            notes.push(format!("{file:<22} one file, {} copies", here.len()));
         }
-        notes.push(format!("{file:<22} one file, {} copies", here.len()));
+    };
+
+    for file in SHARED {
+        compare(file, &eleven, false);
+    }
+    for file in XTASK {
+        compare(file, &nine, false);
+    }
+    for (file, only) in GROUPS {
+        let only: Vec<String> = only.iter().map(|s| (*s).to_string()).collect();
+        let repeated = GROUPS.iter().filter(|(name, _)| name == file).count() > 1;
+        compare(file, &only, repeated);
+    }
+    for file in TEN_ONLY {
+        compare(file, &ten, false);
     }
 
     // The toolchain: the same compiler everywhere, whatever targets each
@@ -186,10 +247,9 @@ mod tests {
 
     #[test]
     fn a_file_absent_everywhere_is_not_agreement() {
-        // Eleven missing `rust-toolchain.toml` files used to collapse into one
-        // distinct value — "MISSING" — and the check reported agreement about
-        // a file that existed nowhere. Root-qualifying it is the fix, and this
-        // pins the shape.
+        // A bare "MISSING" makes eleven absent files collapse into one
+        // distinct value, and the check then reports agreement about a file
+        // that exists nowhere.
         let absent: Vec<String> = ["a", "b", "c"]
             .into_iter()
             .map(|root| format!("MISSING in {root}"))
@@ -206,10 +266,29 @@ mod tests {
 
     #[test]
     fn the_lists_name_no_file_twice() {
-        // A file in both lists would be compared against two different sets of
+        // A file in two lists would be compared against two different sets of
         // roots, and the second answer would be the one printed.
-        for file in XTASK {
-            assert!(!SHARED.contains(&file), "{file} is in both lists");
+        for file in XTASK.iter().chain(TEN_ONLY.iter()) {
+            assert!(!SHARED.contains(file), "{file} is in two lists");
+            assert!(
+                !GROUPS.iter().any(|(name, _)| name == file),
+                "{file} is in two lists"
+            );
+        }
+    }
+
+    #[test]
+    fn a_file_in_several_groups_is_in_each_root_once() {
+        // `cargo.rs` in three shapes: a root in two of them would be held to
+        // two different files.
+        for (file, roots) in GROUPS {
+            for root in *roots {
+                let holders = GROUPS
+                    .iter()
+                    .filter(|(name, others)| name == file && others.contains(root))
+                    .count();
+                assert_eq!(holders, 1, "{root} carries {file} in {holders} groups");
+            }
         }
     }
 }

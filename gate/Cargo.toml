@@ -13,6 +13,9 @@ authors.workspace = true
 repository.workspace = true
 publish = false
 
+[lints]
+workspace = true
+
 [dependencies]
 xpui = { git = "https://github.com/XPUI-Framework/xpui-framework", branch = "main" }
 xpui-chrome = { git = "https://github.com/XPUI-Framework/xpui-chrome", branch = "main" }
