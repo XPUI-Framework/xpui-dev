@@ -1,9 +1,10 @@
+[![CI](https://github.com/XPUI-Framework/xpui-dev/actions/workflows/ci.yml/badge.svg)](https://github.com/XPUI-Framework/xpui-dev/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 # `xpui-dev`
 
-> ⚠️ **Under heavy development.** Not production-ready. The API can break
-> without notice. Use at your own risk.
-
-[![CI](https://github.com/XPUI-Framework/xpui-dev/actions/workflows/ci.yml/badge.svg)](https://github.com/XPUI-Framework/xpui-dev/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+> [!WARNING]
+> Under heavy development. Not production-ready. The API can break without
+> notice. Use at your own risk.
 
 The umbrella. The nine libraries and applications, checked out side by side
 and built as one — ten directories counting this one. A change in one
