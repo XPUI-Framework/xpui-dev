@@ -47,9 +47,10 @@ a fresh clone of the nine would resolve to. Treat it as a local artifact.
 sibling's, the monorepo's included, so a local lock that drifts fails the
 stage like any other: `embedded-graphics`, `embedded-graphics-core`,
 `critical-section` and `u8g2-fonts` cross repository boundaries as **types**,
-and `DrawTarget` from 0.8.1 is not `DrawTarget` from 0.8.2 — the compiler
-names the same path twice in one error and blames a trait rather than a
-version.
+and a `DrawTarget` from one major version of `embedded-graphics-core` is not
+the next one's — the compiler names the same path twice in one error and
+blames a trait rather than a version. Only a semver-incompatible pair can do
+it; cargo unifies 0.8.1 with 0.8.2.
 
 ## What is shared, and how
 
@@ -75,8 +76,9 @@ delay on it. Two kinds are compared:
   by a stage of its own.
 - **Sections**, as text: the `## Where it sits` diagram in every README,
   apart from the `style` line that bolds the repository you are in, and the
-  `[workspace.lints]` table in every workspace root — twelve of those, not
-  ten: `xpui-rp2040`'s `docs-test/` and `xtask/` are workspaces themselves.
+  `[workspace.lints]` table in every workspace root — more of those than
+  there are repositories: `xpui-rp2040`'s `docs-test/` and `xtask/`, and
+  `xpui-esp32`'s `docs-test/`, are workspaces themselves.
 
 A change to any of them is made in all ten in one sitting, or the umbrella
 fails on the first push; [contributing.md](contributing.md) says how.
@@ -87,7 +89,7 @@ fails on the first push; [contributing.md](contributing.md) says how.
 |---|---|
 | every repository is checked out beside this one | names every missing one in a single message, before nine other stages fail one at a time with worse ones. A patched sibling that is gone is a hard cargo error; one present but not a git checkout would pass silently |
 | every shared file is one file | twenty-five paths in twenty-seven comparisons — the table above, each across the repositories that hold it |
-| every shared section is one section | the diagram across the ten READMEs, and the `[workspace.lints]` table across **twelve** workspace roots — `xpui-rp2040`'s `docs-test/` and `xtask/` are two of their own |
+| every shared section is one section | the diagram across the ten READMEs, and the `[workspace.lints]` table across every workspace root — more than one per repository, because `xpui-rp2040`'s `docs-test/` and `xtask/`, and `xpui-esp32`'s `docs-test/`, declare a `[workspace]` of their own |
 | both repositories pin the same SDK revision | `xpui-backends` compiles the shim against the SDK's headers and `xpui-cpp` links it; a revision written down twice is one that will disagree with itself |
 | every organisation URL names a file that is there | each repository's `documented paths resolve` reads relative links and says so; nothing else reads a `github.com/XPUI-Framework/…` URL, and this resolves its `blob/main` and `tree/main` links against the sibling's pushed `origin/main` |
 | every lock file agrees about the shared crates | the four crates above |

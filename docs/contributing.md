@@ -22,7 +22,7 @@ and `format` checks them.
 ## A change that crosses repositories
 
 1. **Make it in the repository that owns the item**, and pass that gate.
-2. **Run `cross` here.** It builds the nine crates in its graph from the
+2. **Run `cross` here.** It builds every crate in its graph from the
    working trees, so a `Chrome` trait change that breaks the simulator fails
    now rather than after a push. It reaches neither firmware nor `xpui-cpp`;
    for those, push the crate you changed and run their gates.
@@ -42,8 +42,8 @@ A copied file is compared byte for byte, and **each one across a different
 set of repositories**: `LICENSE` and `clippy.toml` across eleven, counting
 the monorepo at `../xpui-framework` while it exists; the community files
 across the ten; the `xtask` modules across the nine; the `## Where it sits`
-diagram across the ten READMEs; the `[workspace.lints]` table across twelve
-workspace roots. [working-across-repositories.md](working-across-repositories.md)
+diagram across the ten READMEs; the `[workspace.lints]` table across every
+workspace root, of which there are more than there are repositories. [working-across-repositories.md](working-across-repositories.md)
 has the table. A change to one is a change to every copy, made in one
 sitting. Edit the copy in one repository, copy it to the rest, run each gate,
 and run `cross` here before pushing any of them; the first push of a

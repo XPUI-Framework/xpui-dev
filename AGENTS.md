@@ -7,8 +7,10 @@ one through a `[patch]` table, plus the checks no single repository can make
 — that every sibling is present, that every copy of a shared file and
 section is still one, that both FreeInk SDK pins agree, that every
 organisation URL names a file on the sibling's pushed `main`, that the lock
-files agree about the crates whose types cross a boundary, and that the whole
-stack builds and tests from local paths.
+files agree about the crates whose types cross a boundary, and that every
+library the `[patch]` table covers builds and tests from local paths. **It
+does not reach everything**: neither firmware nor `xpui-cpp` is in that
+graph, so a green run here says nothing about them.
 
 **No cross-repository check exists anywhere else, and there is almost no code
 here.** `format`, `lint` and `rustdoc links resolve` are this repository's own
@@ -60,8 +62,10 @@ them from `..`, and the monorepo `xpui-framework` too while it exists — for
   monorepo's. A drift here fails the stage.
 - **`gate/src/lib.rs` stays empty.** Its test counts the lines above
   `#[cfg(test)]` and fails on one.
-- **The three shared `xtask` module lists are constants in `files.rs`**:
-  add a module to every sibling, then to the list, in the same sitting.
+- **The shared `xtask` module lists are two constants in `files.rs`**:
+  `XTASK`, the ten every sibling carries, and `GROUPS`, for `cpp.rs` and
+  `cargo.rs`'s three shapes. Add a module to every sibling, then to whichever
+  of the two it belongs in, in the same sitting.
 - **The precision pass applies to all six source files by hand** — the four
   above plus `xtask/src/main.rs` and `gate/src/lib.rs`. No comment check runs
   here, so no gate phrase, no run over ten lines, no header over fifteen.

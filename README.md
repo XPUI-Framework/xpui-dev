@@ -27,16 +27,17 @@ requirement, on any machine. Then, from here:
 ```
 
 Nothing depends on this repository and it publishes nothing. Of its two
-workspace members, [`gate/`](gate/) has no code: it names eleven of the twelve
-libraries the `[patch]` table covers, so resolving it resolves the stack
+workspace members, [`gate/`](gate/) has no code: it names every library the
+`[patch]` table covers, so resolving it resolves the stack
 against the checkouts on disk. [`xtask/`](xtask/) is the other, and is the
 gate.
 
 ## Requirements
 
 - **The ten checked out side by side.** A patched sibling that is missing is
-  a hard cargo error; `cross` names all the missing ones in one message
-  first, including the three nothing patches.
+  a hard cargo error, raised before any stage runs and naming one. Where the
+  run gets far enough, `cross` names every missing one in a single message,
+  including the three that nothing patches.
 - **SDL2**, because building the stack builds the simulator.
 - **`git fetch --all` in every sibling first.** The URL check resolves
   `blob/main` links against each sibling's `origin/main`, so a stale remote
