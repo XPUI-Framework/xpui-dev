@@ -136,9 +136,11 @@ fn main() -> ExitCode {
 
 /// Every sibling is on disk.
 ///
-/// First, because everything else here reads them. A missing one would
-/// otherwise resolve from GitHub through the `[patch]` section, and a local
-/// change would go untested with the build green.
+/// First among the stages that read them, and it exists for the message
+/// rather than the verdict: a *patched* sibling that is gone is already a hard
+/// cargo error, raised before any stage runs, and cargo names one and stops.
+/// This names them all at once, and reaches the three that nothing patches,
+/// whose absence cargo has no reason to mention.
 fn siblings_are_present() -> Result<String, String> {
     let missing: Vec<&str> = SIBLINGS
         .into_iter()

@@ -359,6 +359,10 @@ name = "xpui"
 version = "0.1.0"
 
 [[package]]
+name = "xpui-abi-check"
+version = "0.1.0"
+
+[[package]]
 name = "xpui-boards-core"
 version = "0.1.0"
 dependencies = [
@@ -401,6 +405,7 @@ name = "xpui-dev-gate"
 version = "0.1.0"
 dependencies = [
  "xpui",
+ "xpui-abi-check",
  "xpui-boards-core",
  "xpui-boards-pimoroni",
  "xpui-boards-seeed",
@@ -474,7 +479,3 @@ name = "yansi"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfe53a6657fd280eaa890a3bc59152892ffa3e30101319d168b781ed6529b049"
-
-[[patch.unused]]
-name = "xpui-abi-check"
-version = "0.1.0"

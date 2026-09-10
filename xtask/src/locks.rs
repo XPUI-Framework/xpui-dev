@@ -2,12 +2,17 @@
 
 use std::collections::BTreeMap;
 use std::fs;
+use std::path::Path;
+
+use crate::SIBLINGS;
 
 /// Crates that appear in more than one repository's public types.
 ///
-/// `DrawTarget` from 0.8.1 is not `DrawTarget` from 0.8.2, and the compiler's
-/// error blames a trait rather than a version — so a skew here is a type
-/// mismatch that reads like a bug in the code.
+/// A `DrawTarget` from one major version is not the `DrawTarget` from the
+/// next, and the compiler's error blames a trait rather than a version — so a
+/// skew here is a type mismatch that reads like a bug in the code. It has to
+/// be a semver-incompatible pair to bite: cargo unifies 0.8.1 with 0.8.2 and
+/// only one of them survives into the graph.
 const SHARED_CRATES: [&str; 4] = [
     "embedded-graphics",
     "embedded-graphics-core",
@@ -17,17 +22,20 @@ const SHARED_CRATES: [&str; 4] = [
 
 /// Every lock file agrees about the shared crates.
 pub fn locks_agree() -> Result<String, String> {
-    // This repository's own lock, then every sibling's — including the
-    // monorepo's, which resolves the same crates and can skew like any other.
-    // `../xpui-dev/Cargo.lock` is skipped because it is this one under another
+    // This repository's own lock, then every sibling's — and the monorepo's,
+    // which resolves the same crates and can skew like any other. Named
+    // rather than read out of `..`: a directory beside the ten is not part of
+    // the stack, and `20` sends the author to clone one there to follow a
+    // tutorial from clean. `../xpui-dev/Cargo.lock` is this file under another
     // name, and a file compared with itself reads as two repositories
     // agreeing.
     let mut locks = vec!["Cargo.lock".to_string()];
-    for entry in fs::read_dir("..").into_iter().flatten().flatten() {
-        if entry.file_name() == "xpui-dev" {
-            continue;
-        }
-        let lock = entry.path().join("Cargo.lock");
+    let mut roots: Vec<String> = SIBLINGS.iter().map(|s| (*s).to_string()).collect();
+    if Path::new("../xpui-framework/.git").exists() {
+        roots.push("xpui-framework".into());
+    }
+    for root in roots {
+        let lock = Path::new("..").join(&root).join("Cargo.lock");
         if lock.is_file() {
             locks.push(lock.to_string_lossy().to_string());
         }
