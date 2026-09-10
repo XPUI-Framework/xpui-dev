@@ -31,10 +31,10 @@ unescaped_backticks = "deny"
 # would make this repository meaningless anywhere but the machine that wrote
 # it, and would need a check forbidding it a remote.
 #
-# One entry per repository, keyed by the exact URL the manifests name. Cargo
-# matches these by string: a trailing `.git`, `http` for `https`, or a
-# different case and the patch silently does not apply — the build succeeds
-# against the pushed revision and the local change is not tested at all.
+# One entry per repository, keyed by the exact URL the manifests name — Cargo
+# matches these by string, and a patch that does not apply is silent.
+# `docs/working-across-repositories.md` says what that looks like and how to
+# check for it.
 [patch.'https://github.com/XPUI-Framework/xpui-framework']
 xpui = { path = "../xpui" }
 

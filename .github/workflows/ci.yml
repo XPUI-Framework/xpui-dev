@@ -5,6 +5,14 @@ on:
   push:
     branches: [main]
   pull_request:
+  # By hand, so a rotated token or a changed runner can be checked without a
+  # fake commit.
+  workflow_dispatch:
+
+# Read the checkouts and nothing else; the gate writes nowhere. The sibling
+# checkouts below carry their own token.
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -51,11 +59,13 @@ jobs:
       - name: Install SDL2
         run: sudo apt-get update && sudo apt-get install -y libsdl2-dev
 
+      # `rust-toolchain.toml` pins the channel and the components, and lists
+      # no target: `cross` builds for the host only, and the sibling gates
+      # that need a bare-metal triple run in their own workflows.
       - name: Install Rust
         run: |
           cd stack/xpui-dev
           rustup show active-toolchain
-          rustup target add riscv32imc-unknown-none-elf thumbv6m-none-eabi
 
       - name: Cache cargo
         uses: actions/cache@v4

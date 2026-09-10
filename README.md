@@ -3,76 +3,65 @@
 > ⚠️ **Under heavy development.** Not production-ready. The API can break
 > without notice. Use at your own risk.
 
+[![CI](https://github.com/XPUI-Framework/xpui-dev/actions/workflows/ci.yml/badge.svg)](https://github.com/XPUI-Framework/xpui-dev/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 The umbrella. The nine libraries and applications, checked out side by side
-and built as one — ten directories counting this one.
+and built as one — ten directories counting this one. A change in one
+repository is a `cargo update` in the others, and nothing else says the
+others still work; this does, while the change is still local, before any of
+it is pushed. It also holds the checks no single repository can make: that
+every copy of a shared file is still one file, that every organisation URL
+resolves, and that the lock files agree about the crates whose types cross a
+boundary.
 
-**It needs the ten checked out side by side, and nothing else.** The `[patch]`
-table below points at siblings by relative path — `../xpui`, never an absolute
-one — so the layout in [What it is for](#what-it-is-for) is the whole
-requirement, on any machine.
+## Using it
 
-The one thing that does not travel is `Cargo.lock`. It is resolved against
-those patched paths, so it records what the stack looked like on the machine
-that last ran the gate rather than what a fresh clone of the nine would
-resolve to. Treat it as a local artifact; `locks_agree` reads the *siblings'*
-lock files, not this one.
-
-## What it is for
-
-Before the split, `./build-and-test.sh` proved a change across the framework,
-three backends, the boards and five examples at once, and CI ran it as one
-step. A `Chrome` trait change was one commit.
-
-Afterwards it is a change in one repository and a `cargo update` in five
-others, and nothing says the five still work. This is what says so — while the
-change is still local, before any of it is pushed.
+The ten cloned beside each other, exactly as
+[`xpui`'s `docs/orientation.md`](https://github.com/XPUI-Framework/xpui-framework/blob/main/docs/orientation.md)
+lays them out — the `[patch]` table in `Cargo.toml` points at `../xpui`,
+`../xpui-chrome` and so on by relative path, so that layout is the whole
+requirement, on any machine. Then, from here:
 
 ```bash
-git clone git@github.com:XPUI-Framework/xpui-framework.git xpui
-git clone git@github.com:XPUI-Framework/xpui-chrome.git
-git clone git@github.com:XPUI-Framework/xpui-boards.git
-git clone git@github.com:XPUI-Framework/xpui-backends.git
-git clone git@github.com:XPUI-Framework/xpui-simulator.git
-git clone git@github.com:XPUI-Framework/xpui-gallery.git
-git clone git@github.com:XPUI-Framework/xpui-rp2040.git
-git clone git@github.com:XPUI-Framework/xpui-esp32.git
-git clone git@github.com:XPUI-Framework/xpui-cpp.git
-git clone git@github.com:XPUI-Framework/xpui-dev.git
-
-cd xpui-dev && ./build-and-test.sh
+./build-and-test.sh cross    # what no single repository can see — what CI runs
 ```
 
-The checks are in [`xtask/`](xtask/), in Rust. What is here is only what no
-single repository can see; each of the nine has its own `xtask/` holding its
-own list, and nothing is shared between them but ten modules holding the
-parts that are the same job everywhere: reading a markdown fence, a manifest,
-and a path.
+Nothing depends on this repository and it publishes nothing. Of its two
+workspace members, [`gate/`](gate/) has no code: it names eleven of the twelve
+libraries the `[patch]` table covers, so resolving it resolves the stack
+against the checkouts on disk. [`xtask/`](xtask/) is the other, and is the
+gate.
 
-The framework's directory is `xpui`, matching the crate; its repository is
-called `xpui-framework`.
+## Requirements
 
-## What it checks
+- **The ten checked out side by side.** A patched sibling that is missing is
+  a hard cargo error; `cross` names all the missing ones in one message
+  first, including the three nothing patches.
+- **SDL2**, because building the stack builds the simulator.
+- **`git fetch --all` in every sibling first.** The URL check resolves
+  `blob/main` links against each sibling's `origin/main`, so a stale remote
+  is a stale check.
+
+## Checking it
+
+```bash
+./build-and-test.sh cross    # the cross-repository half, seconds to minutes
+./build-and-test.sh          # the above, plus every sibling's own gate — twenty minutes
+```
+
+The checks themselves are in [`xtask/`](xtask/) — this repository's own list,
+in Rust. Its cross-repository stages are the ones no sibling has; `format`,
+`lint` and `rustdoc` cover this repository's own two crates, as they do
+everywhere. There is no `fix` mode: nothing here formats a sibling. What each check catches, and what `cross` leaves to
+the siblings, is in
+[docs/working-across-repositories.md](docs/working-across-repositories.md).
+
+## Where next
 
 | | |
 |---|---|
-| every sibling is present | a missing one would otherwise resolve from GitHub, and a local change would go untested with the build green |
-| every copy of a shared file is the same file | the licence, `clippy.toml` and the ten `xtask` modules below each repository's own check list are copied, not shared. A copy nobody compares is a fork with a delay on it. Each repository's `xtask/src/main.rs` is deliberately *not* compared: it is that repository's own list of checks |
-| every copy of a shared section is the same section | the `## Where it sits` diagram in every README, apart from the `style` line that bolds the repository you are in, and the `[workspace.lints]` table in every workspace root |
-| both FreeInk SDK pins agree | `xpui-backends` compiles the shim against the SDK's headers and `xpui-cpp` links it. A revision written down twice is one that will disagree with itself |
-| every organisation URL resolves | `doc_paths` reads relative links and says so; nothing else anywhere reads a `github.com/XPUI-Framework/…` URL, and twenty-five of them were once 404s |
-| every lock file agrees | `embedded-graphics`, `embedded-graphics-core`, `critical-section` and `u8g2-fonts` cross repository boundaries as *types*. `DrawTarget` from 0.8.1 is not `DrawTarget` from 0.8.2, and the error blames a trait rather than a version |
-| the whole stack builds and tests | from local paths, so what is tested is what is on disk |
-| every repository gates itself | the default run only. `./build-and-test.sh cross` skips this, and CI uses `cross` because each repository's own workflow has already done it |
-
-Each repository still gates itself. This gates what no single one can see.
-
-## The trap in `[patch]`
-
-Cargo matches a patch to a dependency **by URL string**. A trailing `.git`,
-`http` for `https`, or a different case, and the patch silently does not
-apply — the build succeeds against the pushed revision, and the local change
-is not tested at all. `Cargo.lock` is where to check: every `xpui*` crate
-should have no `source` line.
+| [docs/working-across-repositories.md](docs/working-across-repositories.md) | the `[patch]` trap, the lock file that does not travel, the shared files and sections, what each check catches, and what `cross` skips |
+| [docs/contributing.md](docs/contributing.md) | how a change that crosses repositories is made, in what order it is pushed, and how a shared file is changed in all ten at once |
 
 ## Where it sits
 

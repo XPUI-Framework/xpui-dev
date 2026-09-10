@@ -1,8 +1,8 @@
 //! The cross-repository gate.
 //!
-//! Nine repositories that were one, and this is what none of them can check
-//! alone. Each has its own `xtask/` holding its own checks; none of those
-//! checks are here, and none of these are there.
+//! Nine repositories that were one, and everything after `rustdoc links
+//! resolve` below is what none of them can check alone. Each has its own `xtask/` holding its
+//! own list; no cross-repository check is in any of them.
 //!
 //! ```text
 //! ./build-and-test.sh          everything, including each repository's gate
@@ -71,6 +71,7 @@ fn main() -> ExitCode {
                 .map(|()| "host".into())
             }),
         ),
+        ("rustdoc links resolve", Box::new(rustdoc)),
         (
             "every repository is checked out beside this one",
             Box::new(siblings_are_present),
@@ -181,6 +182,28 @@ fn the_whole_stack_builds() -> Result<String, String> {
     run(env!("CARGO"), &["build", "--workspace"])?;
     run(env!("CARGO"), &["test", "--workspace"])?;
     Ok("built and tested".into())
+}
+
+/// This workspace's own docs, with every rustdoc warning an error.
+///
+/// The `[workspace.lints]` table denies `rustdoc::unescaped_backticks`, and a
+/// lint nothing runs is decoration. The nine siblings do this from a shared
+/// `cargo.rs`; this repository has none, so the command lives here.
+fn rustdoc() -> Result<String, String> {
+    let status = Command::new(env!("CARGO"))
+        .env("RUSTDOCFLAGS", "-D warnings")
+        .args(["doc", "--workspace", "--no-deps"])
+        .status()
+        .map_err(|e| format!("could not run cargo: {e}"))?;
+    if status.success() {
+        Ok("cargo doc --workspace --no-deps".into())
+    } else {
+        Err(
+            "cargo doc --workspace --no-deps failed. An intra-doc link that\n\
+             does not resolve is a link nothing else in the build reads."
+                .into(),
+        )
+    }
 }
 
 /// One command, failing with its own name.
