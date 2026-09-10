@@ -23,6 +23,7 @@ xpui-boards-core = { git = "https://github.com/XPUI-Framework/xpui-boards", bran
 xpui-boards-pimoroni = { git = "https://github.com/XPUI-Framework/xpui-boards", branch = "main" }
 xpui-boards-seeed = { git = "https://github.com/XPUI-Framework/xpui-boards", branch = "main" }
 xpui-boards-xteink = { git = "https://github.com/XPUI-Framework/xpui-boards", branch = "main" }
+xpui-abi-check = { git = "https://github.com/XPUI-Framework/xpui-backends", branch = "main" }
 xpui-embedded-graphics = { git = "https://github.com/XPUI-Framework/xpui-backends", branch = "main" }
 xpui-fui = { git = "https://github.com/XPUI-Framework/xpui-backends", branch = "main" }
 xpui-screenshot = { git = "https://github.com/XPUI-Framework/xpui-backends", branch = "main" }
