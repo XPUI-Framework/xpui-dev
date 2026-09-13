@@ -87,14 +87,14 @@ fails on the first push; [contributing.md](contributing.md) says how.
 
 | | |
 |---|---|
-| every repository is checked out beside this one | names every missing one in a single message, before nine other stages fail one at a time with worse ones. A patched sibling that is gone is a hard cargo error; one present but not a git checkout would pass silently |
+| every repository is checked out beside this one | names every missing one in a single message, before the six stages after it in `cross` fail one at a time with worse ones. A patched sibling that is gone is a hard cargo error; one present but not a git checkout would pass silently |
 | every shared file is one file | twenty-five paths in twenty-seven comparisons — the table above, each across the repositories that hold it |
 | every shared section is one section | the diagram across the ten READMEs, and the `[workspace.lints]` table across every workspace root — more than one per repository, because `xpui-rp2040`'s `docs-test/` and `xtask/`, and `xpui-esp32`'s `docs-test/`, declare a `[workspace]` of their own |
 | both repositories pin the same SDK revision | `xpui-backends` compiles the shim against the SDK's headers and `xpui-cpp` links it; a revision written down twice is one that will disagree with itself |
 | every organisation URL names a file that is there | each repository's `documented paths resolve` reads relative links and says so; nothing else reads a `github.com/XPUI-Framework/…` URL, and this resolves its `blob/main` and `tree/main` links against the sibling's pushed `origin/main` |
 | every lock file agrees about the shared crates | the four crates above |
 | every repository gates itself | `all` only: each sibling's `./build-and-test.sh`, from its own root |
-| every crate, from local paths | `cargo build --workspace` and `cargo test --workspace` through the `[patch]` table, so what is tested is what is on disk |
+| every patched crate, from local paths | `cargo build --workspace` and `cargo test --workspace` through the `[patch]` table, so what is built, and what `gate`'s tests run against, is what is on disk |
 
 ## What `cross` skips
 

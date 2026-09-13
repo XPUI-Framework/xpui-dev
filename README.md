@@ -1,6 +1,11 @@
 [![CI](https://github.com/XPUI-Framework/xpui-dev/actions/workflows/ci.yml/badge.svg)](https://github.com/XPUI-Framework/xpui-dev/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-# `xpui-dev`
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-black.png">
+  <img src="assets/logo-white.png" alt="XPUI" width="64" height="64">
+</picture>
+
+# Development
 
 > [!WARNING]
 > Under heavy development. Not production-ready. The API can break without
@@ -14,6 +19,8 @@ it is pushed. It also holds the checks no single repository can make: that
 every copy of a shared file is still one file, that every organisation URL
 resolves, and that the lock files agree about the crates whose types cross a
 boundary.
+
+Every document in this repository is listed in [docs/README.md](docs/README.md).
 
 ## Using it
 
@@ -29,9 +36,8 @@ requirement, on any machine. Then, from here:
 
 Nothing depends on this repository and it publishes nothing. Of its two
 workspace members, [`gate/`](gate/) has no code: it names every library the
-`[patch]` table covers, so resolving it resolves the stack
-against the checkouts on disk. [`xtask/`](xtask/) is the other, and is the
-gate.
+`[patch]` table covers, so resolving it resolves the stack against the
+checkouts on disk. [`xtask/`](xtask/) is the other, and is the gate.
 
 ## Requirements
 
@@ -53,17 +59,10 @@ gate.
 
 The checks themselves are in [`xtask/`](xtask/) — this repository's own list,
 in Rust. Its cross-repository stages are the ones no sibling has; `format`,
-`lint` and `rustdoc` cover this repository's own two crates, as they do
-everywhere. There is no `fix` mode: nothing here formats a sibling. What each check catches, and what `cross` leaves to
-the siblings, is in
+`lint` and `rustdoc links resolve` cover this repository's own two crates, as
+they do everywhere. There is no `fix` mode: nothing here formats a sibling.
+What each check catches, and what `cross` leaves to the siblings, is in
 [docs/working-across-repositories.md](docs/working-across-repositories.md).
-
-## Where next
-
-| | |
-|---|---|
-| [docs/working-across-repositories.md](docs/working-across-repositories.md) | the `[patch]` trap, the lock file that does not travel, the shared files and sections, what each check catches, and what `cross` skips |
-| [docs/contributing.md](docs/contributing.md) | how a change that crosses repositories is made, in what order it is pushed, and how a shared file is changed in all ten at once |
 
 ## Where it sits
 
@@ -74,7 +73,7 @@ knowing it exists, and a firmware reaches whatever it needs directly rather
 than through whoever happens to sit above it.
 
 ```mermaid
-flowchart BT
+flowchart TD
   xpui["xpui<br/>the framework"]
   chrome["xpui-chrome<br/>components"]
   boards["xpui-boards<br/>seven devices"]

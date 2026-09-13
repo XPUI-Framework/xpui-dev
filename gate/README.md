@@ -21,8 +21,8 @@ proved by pulling them in.
 The lock file that falls out is a local artifact — resolved against the
 patched paths, so it records this machine rather than a fresh clone. It is
 still read: `locks_agree` in [`xtask/`](../xtask/) compares it with every
-sibling's, because a disagreement is by definition between two of them. It checks the
-third-party crates whose **types** cross a repository boundary: a
+sibling's, because a disagreement is by definition between two of them. It
+checks the third-party crates whose **types** cross a repository boundary: a
 `DrawTarget` from one major version of `embedded-graphics-core` is a
 different type from the next one's, and the compiler says so by naming the
 same path twice in one error. It takes a semver-incompatible pair — cargo
@@ -33,9 +33,8 @@ an opinion, and its value is that it has none.
 
 ## Checking it
 
-The gate is the repository's; run `./build-and-test.sh cross` from the root.
-This crate's own test is one of the thirteen it runs, the other twelve
-being `xtask`'s:
+The gate is the repository's; run `./build-and-test.sh cross` from the root,
+which runs this crate's one test beside `xtask`'s. To run it alone:
 
 ```bash
 cargo test -p xpui-dev-gate

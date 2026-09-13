@@ -16,8 +16,8 @@ From this repository's root, one directory up from here:
 ```
 
 The ten side by side, SDL2, and a fetch in every sibling first, as
-[`../README.md`](../README.md)'s `## Requirements` says. There is nothing to format here but `xtask/` and `gate/`,
-and `format` checks them.
+[`../README.md`](../README.md)'s `## Requirements` says. There is nothing to
+format here but `xtask/` and `gate/`, and `format` checks them.
 
 ## A change that crosses repositories
 
@@ -43,11 +43,12 @@ set of repositories**: `LICENSE` and `clippy.toml` across eleven, counting
 the monorepo at `../xpui-framework` while it exists; the community files
 across the ten; the `xtask` modules across the nine; the `## Where it sits`
 diagram across the ten READMEs; the `[workspace.lints]` table across every
-workspace root, of which there are more than there are repositories. [working-across-repositories.md](working-across-repositories.md)
-has the table. A change to one is a change to every copy, made in one
-sitting. Edit the copy in one repository, copy it to the rest, run each gate,
-and run `cross` here before pushing any of them; the first push of a
-half-done change fails every sibling's CI, not only this one.
+workspace root, of which there are more than there are repositories.
+[working-across-repositories.md](working-across-repositories.md) has the
+table. A change to one is a change to every copy, made in one sitting. Edit
+the copy in one repository, copy it to the rest, run each gate, and run
+`cross` here before pushing any of them; the first push of a half-done
+change fails every sibling's CI, not only this one.
 
 The `xtask` modules are the ones to be careful with: a fix to the fence
 scanner is a fix in nine places, and each repository's `main.rs` is its own

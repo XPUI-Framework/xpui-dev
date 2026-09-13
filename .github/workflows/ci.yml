@@ -5,12 +5,11 @@ on:
   push:
     branches: [main]
   pull_request:
-  # By hand, so a rotated token or a changed runner can be checked without a
+  # By hand, so a changed runner can be checked without a
   # fake commit.
   workflow_dispatch:
 
-# Read the checkouts and nothing else; the gate writes nowhere. The sibling
-# checkouts below carry their own token.
+# Read the checkouts and nothing else; the gate writes nowhere.
 permissions:
   contents: read
 
@@ -37,25 +36,25 @@ jobs:
       - uses: actions/checkout@v6
         with: { path: stack/xpui-dev }
       - uses: actions/checkout@v6
-        with: { repository: XPUI-Framework/xpui-framework, path: stack/xpui,            token: "${{ secrets.XPUI_CI_TOKEN }}" }
+        with: { repository: XPUI-Framework/xpui-framework, path: stack/xpui }
       - uses: actions/checkout@v6
-        with: { repository: XPUI-Framework/xpui-chrome,    path: stack/xpui-chrome,     token: "${{ secrets.XPUI_CI_TOKEN }}" }
+        with: { repository: XPUI-Framework/xpui-chrome,    path: stack/xpui-chrome }
       - uses: actions/checkout@v6
-        with: { repository: XPUI-Framework/xpui-boards,    path: stack/xpui-boards,     token: "${{ secrets.XPUI_CI_TOKEN }}" }
+        with: { repository: XPUI-Framework/xpui-boards,    path: stack/xpui-boards }
       - uses: actions/checkout@v6
-        with: { repository: XPUI-Framework/xpui-backends,  path: stack/xpui-backends,   token: "${{ secrets.XPUI_CI_TOKEN }}" }
+        with: { repository: XPUI-Framework/xpui-backends,  path: stack/xpui-backends }
       - uses: actions/checkout@v6
-        with: { repository: XPUI-Framework/xpui-simulator, path: stack/xpui-simulator,  token: "${{ secrets.XPUI_CI_TOKEN }}" }
+        with: { repository: XPUI-Framework/xpui-simulator, path: stack/xpui-simulator }
       - uses: actions/checkout@v6
-        with: { repository: XPUI-Framework/xpui-gallery,   path: stack/xpui-gallery,    token: "${{ secrets.XPUI_CI_TOKEN }}" }
+        with: { repository: XPUI-Framework/xpui-gallery,   path: stack/xpui-gallery }
       - uses: actions/checkout@v6
-        with: { repository: XPUI-Framework/xpui-rp2040,    path: stack/xpui-rp2040,     token: "${{ secrets.XPUI_CI_TOKEN }}" }
+        with: { repository: XPUI-Framework/xpui-rp2040,    path: stack/xpui-rp2040 }
       - uses: actions/checkout@v6
-        with: { repository: XPUI-Framework/xpui-esp32,     path: stack/xpui-esp32,      token: "${{ secrets.XPUI_CI_TOKEN }}" }
+        with: { repository: XPUI-Framework/xpui-esp32,     path: stack/xpui-esp32 }
       - uses: actions/checkout@v6
-        with: { repository: XPUI-Framework/xpui-cpp,       path: stack/xpui-cpp,        token: "${{ secrets.XPUI_CI_TOKEN }}" }
+        with: { repository: XPUI-Framework/xpui-cpp,       path: stack/xpui-cpp }
 
-      # `the_whole_stack_builds` compiles the simulator, which links SDL2.
+      # `every_patched_crate_builds` compiles the simulator, which links SDL2.
       - name: Install SDL2
         run: sudo apt-get update && sudo apt-get install -y libsdl2-dev
 
@@ -80,12 +79,11 @@ jobs:
 
       # `cross`, not the default. Each of the nine runs its own gate in its own
       # workflow, so running all nine again here would pay twice for the same
-      # checks and eat a private repository's minutes doing it. What is left is
+      # checks. What is left is
       # the things no single repository can see: that every sibling is here,
       # that the copies of the shared files are still one file each, that both
-      # SDK pins agree, that
-      # every organisation URL resolves, that the lock files agree about the
-      # crates whose types cross a boundary — and that the whole stack still
-      # builds from local paths.
+      # SDK pins agree, that every organisation URL resolves, that the lock
+      # files agree about the crates whose types cross a boundary — and that
+      # every patched crate still builds from local paths.
       - name: The cross-repository gate
         run: cd stack/xpui-dev && ./build-and-test.sh cross

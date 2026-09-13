@@ -1,8 +1,9 @@
 //! The cross-repository gate.
 //!
-//! Nine repositories that were one, and everything after `rustdoc links
-//! resolve` below is what none of them can check alone. Each has its own `xtask/` holding its
-//! own list; no cross-repository check is in any of them.
+//! Nine repositories, each checked out beside this one, and everything after
+//! `rustdoc links resolve` below is what none of them can check alone. Each
+//! has its own `xtask/` holding its own list; no cross-repository check is in
+//! any of them.
 //!
 //! ```text
 //! ./build-and-test.sh          everything, including each repository's gate
@@ -10,8 +11,7 @@
 //! ```
 //!
 //! CI uses `cross` because each repository's own workflow has already run its
-//! gate, and running all nine again would pay twice for the same checks out of
-//! a private repository's minutes.
+//! gate, and running all nine again would pay twice for the same checks.
 
 mod files;
 mod links;
@@ -49,7 +49,6 @@ fn main() -> ExitCode {
     };
 
     let mut gate: Vec<(&str, Box<dyn Fn() -> Result<String, String>>)> = vec![
-        // This repository's own code first.
         (
             "format",
             Box::new(|| run(env!("CARGO"), &["fmt", "--all", "--check"]).map(|()| "clean".into())),
@@ -104,8 +103,8 @@ fn main() -> ExitCode {
         ));
     }
     gate.push((
-        "every crate, from local paths",
-        Box::new(the_whole_stack_builds),
+        "every patched crate, from local paths",
+        Box::new(every_patched_crate_builds),
     ));
 
     let mut failed = 0;
@@ -176,11 +175,12 @@ fn every_repository_gates() -> Result<String, String> {
     }
 }
 
-/// The whole stack, from the paths on disk rather than from GitHub.
+/// Every crate the `[patch]` table covers, from the paths on disk rather than
+/// from GitHub.
 ///
 /// `[patch]` redirects every git dependency at `../<repo>`, so what is built
 /// here is what is in the working trees — including changes nobody has pushed.
-fn the_whole_stack_builds() -> Result<String, String> {
+fn every_patched_crate_builds() -> Result<String, String> {
     run(env!("CARGO"), &["build", "--workspace"])?;
     run(env!("CARGO"), &["test", "--workspace"])?;
     Ok("built and tested".into())

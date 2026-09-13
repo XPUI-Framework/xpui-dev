@@ -8,21 +8,21 @@ one through a `[patch]` table, plus the checks no single repository can make
 section is still one, that both FreeInk SDK pins agree, that every
 organisation URL names a file on the sibling's pushed `main`, that the lock
 files agree about the crates whose types cross a boundary, and that every
-library the `[patch]` table covers builds and tests from local paths. **It
+library the `[patch]` table covers builds from local paths, with the `gate`
+crate's tests run against them. **It
 does not reach everything**: neither firmware nor `xpui-cpp` is in that
 graph, so a green run here says nothing about them.
 
 **No cross-repository check exists anywhere else, and there is almost no code
-here.** `format`, `lint` and `rustdoc links resolve` are this repository's own
-two crates,
-checked as every sibling checks its own; everything after them is what none
-of the nine can see. `gate/` is a crate with nothing in it, kept that way by
-its one test. The `xtask/` here is
-a different program from the nine's — `files.rs`, `links.rs`, `locks.rs`,
-`sections.rs` — and shares no module with them; it carries none of their six
-documentation checks, so this file and the README are held to the standard by
-convention and by review. Nothing here publishes, formats a sibling, or opens
-a window.
+here.** `format`, `lint` and `rustdoc links resolve` check this repository's
+own two crates, as every sibling checks its own; everything after them is
+what none of the nine can see. `gate/` is a crate with nothing in it, kept
+that way by its one test. The `xtask/` here is a different program from the
+nine's — `files.rs`, `links.rs`, `locks.rs`, `sections.rs` — and shares no
+module with them; it carries neither their four documentation checks nor
+their two comment checks, so this file and the README are held to the
+standard by convention and by review. Nothing here publishes, formats a
+sibling, or opens a window.
 
 ## The gate
 
@@ -32,7 +32,7 @@ a window.
 ```
 
 ```text
-format · lint · rustdoc links resolve · every repository is checked out beside this one · every shared file is one file · every shared section is one section · both repositories pin the same SDK revision · every organisation URL names a file that is there · every lock file agrees about the shared crates · every crate, from local paths
+format · lint · rustdoc links resolve · every repository is checked out beside this one · every shared file is one file · every shared section is one section · both repositories pin the same SDK revision · every organisation URL names a file that is there · every lock file agrees about the shared crates · every patched crate, from local paths
 + every repository gates itself, before the last stage
 ```
 
@@ -44,9 +44,10 @@ The full run takes about twenty minutes; iterate on `cross`.
 
 ## What only this repository checks
 
-Everything after `rustdoc links resolve`. The nine cannot see each other; this reads all of
-them from `..`, and the monorepo `xpui-framework` too while it exists — for
-`LICENSE`, `clippy.toml`, its toolchain channel and its lock file.
+Everything after `rustdoc links resolve`. The nine cannot see each other;
+this reads all of them from `..`, and the monorepo `xpui-framework` too while
+it exists — for `LICENSE`, `clippy.toml`, its toolchain channel and its lock
+file.
 
 ## Style that bites here
 
@@ -75,10 +76,11 @@ them from `..`, and the monorepo `xpui-framework` too while it exists — for
 | Document | Proven by |
 |---|---|
 | [`README.md`](README.md), [`gate/README.md`](gate/README.md) | two of this repository's own stages read the front page — the shared-section compare and the URL check — but **nothing checks a heading's order or name.** Read that against the standard by hand; a mangled heading has already shipped here once |
-| [`docs/working-across-repositories.md`](docs/working-across-repositories.md) | its check table is one row per cross-repository stage; `format`, `lint` and `rustdoc` are not in it |
+| [`docs/README.md`](docs/README.md) | the index of `docs/`; nothing here checks its links, so read it against `docs/` by hand |
+| [`docs/working-across-repositories.md`](docs/working-across-repositories.md) | its check table is one row per cross-repository stage; `format`, `lint` and `rustdoc links resolve` are not in it |
 | [`docs/contributing.md`](docs/contributing.md) | the push order is `SIBLINGS`' order in `xtask/src/main.rs` |
 | `AGENTS.md` | the stage list above, against what `./build-and-test.sh cross` prints |
-| every `///` and `//!` | `rustdoc`, with warnings denied |
+| every `///` and `//!` | `rustdoc links resolve`, with warnings denied |
 
 ## Git
 

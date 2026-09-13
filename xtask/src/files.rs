@@ -247,9 +247,7 @@ mod tests {
 
     #[test]
     fn a_file_absent_everywhere_is_not_agreement() {
-        // A bare "MISSING" makes eleven absent files collapse into one
-        // distinct value, and the check then reports agreement about a file
-        // that exists nowhere.
+        // The value `shared_files_agree` records for a missing `channel` line.
         let absent: Vec<String> = ["a", "b", "c"]
             .into_iter()
             .map(|root| format!("MISSING in {root}"))
