@@ -33,25 +33,25 @@ jobs:
       #
       # `xpui-framework` is checked out as `xpui`, matching the crate — the
       # repository is named for the project and the directory for the crate.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with: { path: stack/xpui-dev }
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with: { repository: XPUI-Framework/xpui-framework, path: stack/xpui }
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with: { repository: XPUI-Framework/xpui-chrome,    path: stack/xpui-chrome }
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with: { repository: XPUI-Framework/xpui-boards,    path: stack/xpui-boards }
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with: { repository: XPUI-Framework/xpui-backends,  path: stack/xpui-backends }
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with: { repository: XPUI-Framework/xpui-simulator, path: stack/xpui-simulator }
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with: { repository: XPUI-Framework/xpui-gallery,   path: stack/xpui-gallery }
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with: { repository: XPUI-Framework/xpui-rp2040,    path: stack/xpui-rp2040 }
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with: { repository: XPUI-Framework/xpui-esp32,     path: stack/xpui-esp32 }
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with: { repository: XPUI-Framework/xpui-cpp,       path: stack/xpui-cpp }
 
       # `every_patched_crate_builds` compiles the simulator, which links SDL2.
