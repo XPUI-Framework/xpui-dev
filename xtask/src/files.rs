@@ -10,7 +10,7 @@ use crate::SIBLINGS;
 /// all eleven — a lint setting that drifts in the umbrella is still drift.
 const SHARED: [&str; 2] = ["LICENSE", "clippy.toml"];
 
-/// The ten modules every sibling's `xtask` carries.
+/// The thirteen modules every sibling's `xtask` carries.
 ///
 /// Not `main.rs`, which is each repository's own list of checks and is meant
 /// to differ. These hold the reading of a markdown fence, a manifest, a path
@@ -18,16 +18,19 @@ const SHARED: [&str; 2] = ["LICENSE", "clippy.toml"];
 ///
 /// The nine only: this repository's gate is the cross-repository half and
 /// shares no checks with them.
-const XTASK: [&str; 10] = [
+const XTASK: [&str; 13] = [
     "xtask/src/agents.rs",
     "xtask/src/commands.rs",
     "xtask/src/comments.rs",
     "xtask/src/docs.rs",
     "xtask/src/faults.rs",
     "xtask/src/fences.rs",
+    "xtask/src/pages.rs",
     "xtask/src/paths.rs",
     "xtask/src/prose.rs",
     "xtask/src/readme.rs",
+    "xtask/src/reference.rs",
+    "xtask/src/rustdoc.rs",
     "xtask/src/tree.rs",
 ];
 

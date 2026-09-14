@@ -64,7 +64,7 @@ file.
 - **`gate/src/lib.rs` stays empty.** Its test counts the lines above
   `#[cfg(test)]` and fails on one.
 - **The shared `xtask` module lists are two constants in `files.rs`**:
-  `XTASK`, the ten every sibling carries, and `GROUPS`, for `cpp.rs` and
+  `XTASK`, the thirteen every sibling carries, and `GROUPS`, for `cpp.rs` and
   `cargo.rs`'s three shapes. Add a module to every sibling, then to whichever
   of the two it belongs in, in the same sitting.
 - **The precision pass applies to all six source files by hand** — the four
