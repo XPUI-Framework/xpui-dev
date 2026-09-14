@@ -2,12 +2,12 @@
 
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use crate::SIBLINGS;
 
-/// Carried by the nine, the monorepo and this repository, and compared across
-/// all eleven — a lint setting that drifts in the umbrella is still drift.
+/// Carried by the nine and this repository, and compared across all ten — a
+/// lint setting that drifts in the umbrella is still drift.
 const SHARED: [&str; 2] = ["LICENSE", "clippy.toml"];
 
 /// The thirteen modules every sibling's `xtask` carries.
@@ -87,8 +87,8 @@ const GROUPS: &[(&str, &[&str])] = &[
     ),
 ];
 
-/// Files carried by the nine and this repository, and not the monorepo: the
-/// community files and the two reviewer agents.
+/// The community files and the two reviewer agents, carried by the nine and
+/// this repository.
 const TEN_ONLY: [&str; 8] = [
     "SECURITY.md",
     "CODE_OF_CONDUCT.md",
@@ -105,14 +105,7 @@ const TEN_ONLY: [&str; 8] = [
 /// There is no submodule and nothing is published, so these files are
 /// **copied**. A copy nobody compares is a fork with a delay on it.
 pub fn shared_files_agree() -> Result<String, String> {
-    let mut roots: Vec<String> = SIBLINGS.iter().map(|s| s.to_string()).collect();
-    // The monorepo too, while it exists. It is not one of the nine — its
-    // remote is the author's own — but it carries the same copies.
-    if Path::new("../xpui-framework/.git").exists() {
-        roots.push("xpui-framework".into());
-    }
-    let mut eleven = roots.clone();
-    eleven.push("xpui-dev".into());
+    let roots: Vec<String> = SIBLINGS.iter().map(|s| s.to_string()).collect();
     let nine: Vec<String> = SIBLINGS.iter().map(|s| s.to_string()).collect();
     let mut ten = nine.clone();
     ten.push("xpui-dev".into());
@@ -151,7 +144,7 @@ pub fn shared_files_agree() -> Result<String, String> {
     };
 
     for file in SHARED {
-        compare(file, &eleven, false);
+        compare(file, &ten, false);
     }
     for file in XTASK {
         compare(file, &nine, false);
@@ -172,7 +165,7 @@ pub fn shared_files_agree() -> Result<String, String> {
     for root in roots.iter().chain(std::iter::once(&"xpui-dev".to_string())) {
         let text = fs::read_to_string(PathBuf::from("..").join(root).join("rust-toolchain.toml"))
             .unwrap_or_default();
-        // Root-qualified when it is missing. A bare "MISSING" makes eleven
+        // Root-qualified when it is missing. A bare "MISSING" makes ten
         // absent files collapse into one distinct value, and the check then
         // reports agreement about a file that exists nowhere.
         let channel = match text.lines().find(|l| l.trim_start().starts_with("channel")) {

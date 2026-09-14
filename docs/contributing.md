@@ -15,7 +15,7 @@ From this repository's root, one directory up from here:
 ./build-and-test.sh          # the above, plus every sibling's gate
 ```
 
-The ten side by side, SDL2, and a fetch in every sibling first, as
+The ten side by side, [SDL2](https://www.libsdl.org/), and a fetch in every sibling first, as
 [`../README.md`](../README.md)'s `## Requirements` says. There is nothing to
 format here but `xtask/` and `gate/`, and `format` checks them.
 
@@ -39,8 +39,7 @@ format here but `xtask/` and `gate/`, and `format` checks them.
 ## A shared file, in every copy at once
 
 A copied file is compared byte for byte, and **each one across a different
-set of repositories**: `LICENSE` and `clippy.toml` across eleven, counting
-the monorepo at `../xpui-framework` while it exists; the community files
+set of repositories**: `LICENSE` and `clippy.toml` across the ten; the community files
 across the ten; the `xtask` modules across the nine; the `## Where it sits`
 diagram across the ten READMEs; the `[workspace.lints]` table across every
 workspace root, of which there are more than there are repositories.

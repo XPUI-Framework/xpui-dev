@@ -45,7 +45,7 @@ checkouts on disk. [`xtask/`](xtask/) is the other, and is the gate.
   a hard cargo error, raised before any stage runs and naming one. Where the
   run gets far enough, `cross` names every missing one in a single message,
   including the three that nothing patches.
-- **SDL2**, because building the stack builds the simulator.
+- **[SDL2](https://www.libsdl.org/)**, because building the stack builds the simulator.
 - **`git fetch --all` in every sibling first.** The URL check resolves
   `blob/main` links against each sibling's `origin/main`, so a stale remote
   is a stale check.
@@ -58,7 +58,7 @@ checkouts on disk. [`xtask/`](xtask/) is the other, and is the gate.
 ```
 
 The checks themselves are in [`xtask/`](xtask/) — this repository's own list,
-in Rust. Its cross-repository stages are the ones no sibling has; `format`,
+in [Rust](https://rust-lang.org/). Its cross-repository stages are the ones no sibling has; `format`,
 `lint` and `rustdoc links resolve` cover this repository's own two crates, as
 they do everywhere. There is no `fix` mode: nothing here formats a sibling.
 What each check catches, and what `cross` leaves to the siblings, is in

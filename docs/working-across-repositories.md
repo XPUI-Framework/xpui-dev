@@ -44,7 +44,7 @@ firmwares and `xpui-cpp` — are named too, in one message rather than nine.
 the stack looked like on the machine that last ran the gate rather than what
 a fresh clone of the nine would resolve to. Treat it as a local artifact.
 `every lock file agrees about the shared crates` reads this one **and** every
-sibling's, the monorepo's included, so a local lock that drifts fails the
+sibling's, so a local lock that drifts fails the
 stage like any other: `embedded-graphics`, `embedded-graphics-core`,
 `critical-section` and `u8g2-fonts` cross repository boundaries as **types**,
 and a `DrawTarget` from one major version of `embedded-graphics-core` is not
@@ -62,17 +62,17 @@ delay on it. Two kinds are compared:
 
   | | |
   |---|---|
-  | `LICENSE`, `clippy.toml` | all eleven — the nine, this one, and the monorepo while it exists |
+  | `LICENSE`, `clippy.toml` | all ten — the nine and this one |
   | `SECURITY.md`, `CODE_OF_CONDUCT.md`, both `.github/ISSUE_TEMPLATE/*.yml`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/dependabot.yml`, both `.claude/agents/*.md` | the ten |
-  | ten `xtask` modules | the nine: reading a markdown fence, a manifest, a path and a comment is the same job everywhere |
-  | `.gitignore` | nine of the ten; `xpui-cpp`'s is a superset with the PlatformIO lines, and there is no superset mode |
+  | thirteen `xtask` modules | the nine: reading a markdown fence, a manifest, a path and a comment is the same job everywhere |
+  | `.gitignore` | nine of the ten; `xpui-cpp`'s is a superset with the [PlatformIO](https://platformio.org/) lines, and there is no superset mode |
   | `build-and-test.sh` | six |
   | `xtask/src/cpp.rs` | the two that hold C++ |
   | `xtask/src/cargo.rs` | in **three shapes** — `xpui-rp2040` adds `host_triple` because its cargo config targets the board, and `xpui-simulator` and `xpui-cpp` drop `target_installed` because neither has a bare-metal lint |
-  | `rust-toolchain.toml`'s `channel` line | all eleven, so a warning means the same thing everywhere |
+  | `rust-toolchain.toml`'s `channel` line | all ten, so a warning means the same thing everywhere |
 
   Each repository's `xtask/src/main.rs` is deliberately *not* compared; it is
-  that repository's own list of checks. The FreeInk SDK revision is compared
+  that repository's own list of checks. The [FreeInk SDK](https://github.com/Free-Ink/freeink-sdk) revision is compared
   by a stage of its own.
 - **Sections**, as text: the `## Where it sits` diagram in every README,
   apart from the `style` line that bolds the repository you are in, and the
@@ -106,7 +106,7 @@ So `cross` does not run:
   checks, its README order, its doctests;
 - **anything in C++** — the format stage, the compiled `cpp` fences, the
   symbol check, the shim, the host and its `ctest` cases. CI here installs
-  neither clang-format nor the FreeInk SDK, and needs neither;
+  neither [clang-format](https://clang.llvm.org/docs/ClangFormat.html) nor the FreeInk SDK, and needs neither;
 - **any firmware image** — the `all` mode of `xpui-rp2040` and `xpui-esp32`.
   Nor does the full run: `every repository gates itself` invokes each
   sibling's script with no argument, which is its `check` mode, and both

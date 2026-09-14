@@ -45,9 +45,7 @@ The full run takes about twenty minutes; iterate on `cross`.
 ## What only this repository checks
 
 Everything after `rustdoc links resolve`. The nine cannot see each other;
-this reads all of them from `..`, and the monorepo `xpui-framework` too while
-it exists — for `LICENSE`, `clippy.toml`, its toolchain channel and its lock
-file.
+this reads all of them from `..`.
 
 ## Style that bites here
 
@@ -59,8 +57,8 @@ file.
   silently does not apply. `Cargo.lock` is where to check: every `xpui*`
   crate has no `source` line.
 - **`Cargo.lock` here is a local artifact**, resolved against the patched
-  paths — but `locks_agree` still reads it, alongside every sibling's and the
-  monorepo's. A drift here fails the stage.
+  paths — but `locks_agree` still reads it, alongside every sibling's. A drift
+  here fails the stage.
 - **`gate/src/lib.rs` stays empty.** Its test counts the lines above
   `#[cfg(test)]` and fails on one.
 - **The shared `xtask` module lists are two constants in `files.rs`**:

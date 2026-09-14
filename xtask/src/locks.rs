@@ -22,18 +22,14 @@ const SHARED_CRATES: [&str; 4] = [
 
 /// Every lock file agrees about the shared crates.
 pub fn locks_agree() -> Result<String, String> {
-    // This repository's own lock, then every sibling's — and the monorepo's,
-    // which resolves the same crates and can skew like any other. Named
+    // This repository's own lock, then every sibling's. Named
     // rather than read out of `..`: a directory beside the ten is not part of
     // the stack, and `20` sends the author to clone one there to follow a
     // tutorial from clean. `../xpui-dev/Cargo.lock` is this file under another
     // name, and a file compared with itself reads as two repositories
     // agreeing.
     let mut locks = vec!["Cargo.lock".to_string()];
-    let mut roots: Vec<String> = SIBLINGS.iter().map(|s| (*s).to_string()).collect();
-    if Path::new("../xpui-framework/.git").exists() {
-        roots.push("xpui-framework".into());
-    }
+    let roots: Vec<String> = SIBLINGS.iter().map(|s| (*s).to_string()).collect();
     for root in roots {
         let lock = Path::new("..").join(&root).join("Cargo.lock");
         if lock.is_file() {

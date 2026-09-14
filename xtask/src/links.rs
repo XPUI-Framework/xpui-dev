@@ -41,8 +41,7 @@ pub fn org_links_resolve() -> Result<String, String> {
             continue;
         }
         // The organisation's `xpui-framework` is the framework crate, and it
-        // is checked out here as `xpui`. The directory of that name beside it
-        // is the monorepo, on a different remote entirely.
+        // is checked out here as `xpui`.
         let dir = if repo == "xpui-framework" {
             "xpui"
         } else {

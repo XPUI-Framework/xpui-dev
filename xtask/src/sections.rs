@@ -60,8 +60,8 @@ fn declares_a_workspace(text: &str) -> bool {
 /// nothing compares, and its members then lint under cargo's defaults with
 /// every gate green — which a list can never catch, because the root it misses
 /// is the root it does not name. `git ls-files` rather than a walk, so
-/// `target/` and an untracked scratch clone are excluded for free, and the ten
-/// only, so the frozen monorepo's own nested workspace stays out.
+/// `target/` and an untracked scratch clone are excluded for free, and only
+/// the ten are read.
 fn nested_roots() -> Vec<String> {
     let mut found = Vec::new();
     for repo in SIBLINGS.iter().chain(std::iter::once(&"xpui-dev")) {
